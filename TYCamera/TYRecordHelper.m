@@ -77,4 +77,17 @@
     }];
 }
 
++ (AVMutableComposition *)combineVideosWithAssetArray:(NSArray<AVAsset *> *)assetArray {
+    AVMutableComposition *composition = [AVMutableComposition composition];
+    AVMutableCompositionTrack *track = [composition addMutableTrackWithMediaType:AVMediaTypeVideo preferredTrackID:kCMPersistentTrackID_Invalid];
+    __block NSTimeInterval temDuration = 0.f;
+    [assetArray enumerateObjectsUsingBlock:^(AVAsset * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        CMTimeRange timeRange = CMTimeRangeMake(kCMTimeZero, obj.duration);
+        NSError *error = nil;
+        [track insertTimeRange:timeRange ofTrack:[obj tracksWithMediaType:AVMediaTypeVideo].firstObject atTime:CMTimeMakeWithSeconds(temDuration, 0) error:&error];
+        temDuration += CMTimeGetSeconds(obj.duration);
+    }];
+    return composition;
+}
+
 @end

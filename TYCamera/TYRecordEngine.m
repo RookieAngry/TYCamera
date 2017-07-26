@@ -28,8 +28,7 @@
 @property (nonatomic, strong) NSDate *startCaptureTime;
 @property (nonatomic, assign) NSTimeInterval currentRecordTime;
 @property (atomic, assign) BOOL isCapturing;
-@property (atomic, assign) BOOL isPaused;
-@property (nonatomic, assign) BOOL isStopped;
+@property (nonatomic, strong) NSMutableArray *videosPath;
 
 @end
 
@@ -92,32 +91,14 @@
         [self.captureSession stopRunning];
     }
     self.isCapturing = NO;
-    self.isPaused = NO;
-    self.isStopped = YES;
 }
 
 - (void)startRecord {
     self.isCapturing = YES;
-    self.isPaused = NO;
-    self.isStopped = NO;
-}
-
-- (void)pauseRecord {
-    self.isCapturing = NO;
-    self.isPaused = YES;
-    self.isStopped = NO;
-}
-
-- (void)resumeRecord {
-    self.isCapturing = YES;
-    self.isPaused = NO;
-    self.isStopped = NO;
 }
 
 - (void)stopRecord {
     self.isCapturing = NO;
-    self.isPaused = YES;
-    self.isStopped = YES;
 }
 
 - (void)switchCamera {
@@ -150,12 +131,25 @@
     [self switchCameraAnimation];
 }
 
-- (void)finishCaptureHandler:(void (^)(UIImage *))handler {
+- (void)removeVideoAtIndex:(NSInteger)index {
+    
+}
+
+- (void)finishCaptureHandler:(void (^)(UIImage *, NSString *, NSTimeInterval))handler {
     
 }
 
 - (void)finishTakePhotoHandler:(void (^)(UIImage *))handler {
     self.cameraConnection.videoMirrored = [self isFrontFacingCameraPreset];
+    [self.photoOutput captureStillImageAsynchronouslyFromConnection:self.cameraConnection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
+        if (!error && imageDataSampleBuffer) {
+            NSData *photoData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+            UIImage *photo = [UIImage imageWithData:photoData];
+            handler(photo);
+        } else {
+            NSLog(@"Take Photo Failure! Error:%@", error);
+        }
+    }];
 }
 
 #pragma mark - Private Functions
@@ -167,6 +161,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
     if (self.isCapturing) {
         [self.recordEncoder encoderFrame:sampleBuffer];
+    } else {
+        self.recordEncoder = nil;
     }
 }
 
@@ -278,12 +274,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [self.captureSession startRunning];
 }
 
-#pragma mark - Getter
-
-- (NSString *)videoPath {
-    return [TYRecordHelper videoPath];
-}
-
 #pragma mark - Lazy Load
 
 - (AVCaptureSession *)captureSession {
@@ -378,9 +368,17 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (TYRecordEncoder *)recordEncoder {
     if (!_recordEncoder) {
         self.filePath  = [TYRecordHelper videoPath];
+        [self.videosPath addObject:self.filePath];
         _recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath];
     }
     return _recordEncoder;
+}
+
+- (NSMutableArray *)videosPath {
+    if (!_videosPath) {
+        _videosPath = [NSMutableArray array];
+    }
+    return _videosPath;
 }
 
 @end

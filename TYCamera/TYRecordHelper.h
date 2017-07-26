@@ -43,4 +43,11 @@
                 success:(void(^)(UIImage *coverImage))success
                 failure:(void(^)(NSError *error))failure;
 
+/**
+ 将视频片段进行整合
+
+ @param assetArray 需要整合的视频资源对象数组
+ */
++ (AVMutableComposition *)combineVideosWithAssetArray:(NSArray<AVAsset *>*)assetArray;
+
 @end

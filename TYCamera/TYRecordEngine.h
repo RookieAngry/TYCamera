@@ -26,7 +26,6 @@ typedef NS_ENUM(NSUInteger, TYRecordEngineType) {
 @interface TYRecordEngine : NSObject
 
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
-@property (nonatomic, copy, readonly) NSString *videoPath;
 @property (nonatomic, assign) NSTimeInterval maxRecordTime;
 @property (nonatomic, assign) NSTimeInterval minRecordTime;
 @property (nonatomic, weak) id<TYRecordEngineDelegate> delegate;
@@ -52,26 +51,23 @@ typedef NS_ENUM(NSUInteger, TYRecordEngineType) {
 - (void)startRecord;
 
 /**
- 暂停录制
- */
-- (void)pauseRecord;
-
-/**
- 恢复录制
- */
-- (void)resumeRecord;
-
-/**
- 结束录制
+ 停止录制
  */
 - (void)stopRecord;
 
 /**
+ 移除对应下标的视频片段
+
+ @param index 视频片段的下标
+ */
+- (void)removeVideoAtIndex:(NSInteger)index;
+
+/**
  完成视频录制
 
- @param handler 视频录制成功后，返回视频封面图
+ @param handler 视频录制成功后，返回视频封面图,视频存储的路径以及视频时长
  */
-- (void)finishCaptureHandler:(void(^)(UIImage *coverImage))handler;
+- (void)finishCaptureHandler:(void(^)(UIImage *coverImage, NSString *filePath, NSTimeInterval duration))handler;
 
 /**
  完成拍照
