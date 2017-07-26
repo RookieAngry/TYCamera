@@ -7,7 +7,16 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 
 @interface TYRecordEncoder : NSObject
+
++ (instancetype)recordEncoderPath:(NSString *)filePath;
+
+- (instancetype)initPath:(NSString *)filePath;
+
+- (void)encoderFrame:(CMSampleBufferRef)sampleBuffer;
+
+- (void)encoderFinishCompletionHandler:(void(^)())handler;
 
 @end

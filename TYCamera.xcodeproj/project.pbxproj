@@ -236,7 +236,7 @@
 				TargetAttributes = {
 					A766BB741F262500004D9A81 = {
 						CreatedOnToolsVersion = 8.3.3;
-						DevelopmentTeam = QT888E2E67;
+						DevelopmentTeam = 357U756QKW;
 						ProvisioningStyle = Automatic;
 					};
 					A766BB8D1F262500004D9A81 = {
@@ -460,7 +460,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = QT888E2E67;
+				DEVELOPMENT_TEAM = 357U756QKW;
 				INFOPLIST_FILE = TYCamera/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -473,7 +473,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = QT888E2E67;
+				DEVELOPMENT_TEAM = 357U756QKW;
 				INFOPLIST_FILE = TYCamera/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -551,6 +551,7 @@
 				A766BBA41F262500004D9A81 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A766BBA51F262500004D9A81 /* Build configuration list for PBXNativeTarget "TYCameraTests" */ = {
 			isa = XCConfigurationList;
@@ -559,6 +560,7 @@
 				A766BBA71F262500004D9A81 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A766BBA81F262500004D9A81 /* Build configuration list for PBXNativeTarget "TYCameraUITests" */ = {
 			isa = XCConfigurationList;
@@ -567,6 +569,7 @@
 				A766BBAA1F262500004D9A81 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -7,11 +7,26 @@
 //
 
 #import "TYRecordHelper.h"
-#import <AVFoundation/AVFoundation.h>
 
 @implementation TYRecordHelper
 
 #pragma mark - Public Functions
+
++ (NSString *)videoPath {
+    NSString *videoDirectory = [NSTemporaryDirectory() stringByAppendingString:@"Videos"];
+    NSFileManager *fileM = [NSFileManager defaultManager];
+    BOOL isDirectory = NO;
+    BOOL isExist = ![fileM fileExistsAtPath:videoDirectory isDirectory:&isDirectory];
+    if (!isDirectory && !isExist) {
+        NSError *error = nil;
+        BOOL result = [fileM createDirectoryAtPath:videoDirectory withIntermediateDirectories:YES attributes:nil error:&error];
+        if (error || !result) {
+            NSLog(@"Create Videos Directory Failure");
+            return nil;
+        }
+    }
+    return [videoDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%f.mp4",[[NSDate date] timeIntervalSince1970]]];
+}
 
 + (void)transformFormatToMp4:(NSString *)mediaPath
                   presetName:(NSString *)presetName
@@ -60,22 +75,6 @@
             success(coverImage);
         }
     }];
-}
-
-+ (NSString *)videoPath {
-    NSString *videoDirectory = [NSTemporaryDirectory() stringByAppendingString:@"Videos"];
-    NSFileManager *fileM = [NSFileManager defaultManager];
-    BOOL isDirectory = NO;
-    BOOL isExist = ![fileM fileExistsAtPath:videoDirectory isDirectory:&isDirectory];
-    if (!isDirectory && !isExist) {
-        NSError *error = nil;
-        BOOL result = [fileM createDirectoryAtPath:videoDirectory withIntermediateDirectories:YES attributes:nil error:&error];
-        if (error || !result) {
-            NSLog(@"Create Videos Directory Failure");
-            return nil;
-        }
-    }
-    return [videoDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.mp4",[NSDate date]]];
 }
 
 @end

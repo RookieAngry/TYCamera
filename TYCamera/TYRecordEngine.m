@@ -10,7 +10,7 @@
 #import "TYRecordEncoder.h"
 #import "TYRecordHelper.h"
 
-@interface TYRecordEngine () <AVCaptureVideoDataOutputSampleBufferDelegate>
+@interface TYRecordEngine () <AVCaptureVideoDataOutputSampleBufferDelegate, CAAnimationDelegate>
 
 @property (nonatomic, strong) AVCaptureSession *captureSession;
 @property (nonatomic, strong) AVCaptureDeviceInput *cameraInput;
@@ -21,7 +21,15 @@
 @property (nonatomic, strong) AVCaptureConnection *cameraConnection;
 @property (nonatomic, strong) AVCaptureConnection *microConnection;
 
+@property (nonatomic, strong) TYRecordEncoder *recordEncoder;
+@property (nonatomic, copy) NSString *filePath;
+
 @property (nonatomic, strong) dispatch_queue_t captureQueue;
+@property (nonatomic, strong) NSDate *startCaptureTime;
+@property (nonatomic, assign) NSTimeInterval currentRecordTime;
+@property (atomic, assign) BOOL isCapturing;
+@property (atomic, assign) BOOL isPaused;
+@property (nonatomic, assign) BOOL isStopped;
 
 @end
 
@@ -41,27 +49,113 @@
     return self;
 }
 
-- (instancetype)initRecordEnginePresetName:(NSString *)presetName devicePosition:(AVCaptureDevicePosition)position recordType:(TYRecordEngineType)recordType {
+- (instancetype)initRecordEngineSessionPreset:(NSString *)preset
+                               devicePosition:(AVCaptureDevicePosition)position
+                                   recordType:(TYRecordEngineType)recordType {
     if (self = [super init]) {
-        _presetName = presetName;
+        _presetName = preset;
         _position = position;
         _recordType = recordType;
     }
     return self;
 }
 
+#pragma mark - Override Functions
+
+- (void)dealloc {
+    if ([self.captureSession isRunning]) {
+        [self.captureSession stopRunning];
+    }
+    
+    [self removeInputsOutputs];
+    if (self.cameraOutput) {
+        [self.cameraOutput setSampleBufferDelegate:nil queue:dispatch_get_main_queue()];
+    }
+    
+    if (self.microOutput) {
+        [self.microOutput setSampleBufferDelegate:nil queue:dispatch_get_main_queue()];
+    }
+}
+
 #pragma mark - Public Functions
 
-- (void)startRecord {
-    @synchronized (self) {
+- (void)openRecordFunctions {
+    if (![self.captureSession isRunning]) {
+        self.startCaptureTime = [NSDate date];
+        [self addInputOutput];
         [self.captureSession startRunning];
     }
 }
 
-- (void)stopRecord {
-    @synchronized (self) {
+- (void)closeRecordFunctions {
+    if ([self.captureSession isRunning]) {
         [self.captureSession stopRunning];
     }
+    self.isCapturing = NO;
+    self.isPaused = NO;
+    self.isStopped = YES;
+}
+
+- (void)startRecord {
+    self.isCapturing = YES;
+    self.isPaused = NO;
+    self.isStopped = NO;
+}
+
+- (void)pauseRecord {
+    self.isCapturing = NO;
+    self.isPaused = YES;
+    self.isStopped = NO;
+}
+
+- (void)resumeRecord {
+    self.isCapturing = YES;
+    self.isPaused = NO;
+    self.isStopped = NO;
+}
+
+- (void)stopRecord {
+    self.isCapturing = NO;
+    self.isPaused = YES;
+    self.isStopped = YES;
+}
+
+- (void)switchCamera {
+    AVCaptureDevicePosition currentDevicePositon = [self.cameraInput device].position;
+    if (currentDevicePositon == AVCaptureDevicePositionBack) {
+        currentDevicePositon = AVCaptureDevicePositionFront;
+    } else {
+        currentDevicePositon = AVCaptureDevicePositionBack;
+    }
+    
+    NSError *error = nil;
+    AVCaptureDeviceInput *newCameraInput = [AVCaptureDeviceInput deviceInputWithDevice:[self captureDeviceInput:currentDevicePositon] error:&error];
+    if (error) {
+        NSLog(@"Get New Camera Input Failure! Error:%@", error);
+        return;
+    }
+    
+    [self.captureSession beginConfiguration];
+    
+    [self.captureSession removeInput:self.cameraInput];
+    if ([self.captureSession canAddInput:newCameraInput]) {
+        [self.captureSession addInput:newCameraInput];
+        self.cameraInput = newCameraInput;
+    } else {
+        [self.captureSession addInput:self.cameraInput];
+    }
+    
+    [self.captureSession commitConfiguration];
+    
+    [self switchCameraAnimation];
+}
+
+- (void)finishCaptureHandler:(void (^)(UIImage *))handler {
+    
+}
+
+- (void)finishTakePhotoHandler:(void (^)(UIImage *))handler {
+    self.cameraConnection.videoMirrored = [self isFrontFacingCameraPreset];
 }
 
 #pragma mark - Private Functions
@@ -69,9 +163,11 @@
 #pragma mark - AVCaptureVideoDataOutputSampleBufferDelegate
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
-  didDropSampleBuffer:(CMSampleBufferRef)sampleBuffer
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
-    
+    if (self.isCapturing) {
+        [self.recordEncoder encoderFrame:sampleBuffer];
+    }
 }
 
 #pragma mark - Tool Functions
@@ -86,7 +182,13 @@
     return nil;
 }
 
+- (BOOL)isFrontFacingCameraPreset {
+    return [self.cameraInput device].position == AVCaptureDevicePositionFront ? YES : NO;
+}
+
 - (void)addInputOutput {
+    [self.captureSession beginConfiguration];
+    
     if ([self.captureSession canAddInput:self.cameraInput]) {
         [self.captureSession addInput:self.cameraInput];
     }
@@ -103,22 +205,86 @@
             break;
             
         case TYRecordEngineTypePhoto: {
-            
+            if ([self.captureSession canAddOutput:self.photoOutput]) {
+                [self.captureSession addOutput:self.photoOutput];
+            }
         }
             break;
             
         default:
             break;
     }
+    
+    [self.captureSession commitConfiguration];
 }
 
 - (void)addVideoInputOutput {
-    if (![self.captureSession canAddInput:self.microInput]) {
+    if ([self.captureSession canAddInput:self.microInput]) {
         [self.captureSession addInput:self.microInput];
+    }
+    
+    if ([self.captureSession canAddOutput:self.cameraOutput]) {
+        [self.captureSession addOutput:self.cameraOutput];
+    }
+    
+    if ([self.captureSession canAddOutput:self.microOutput]) {
+        [self.captureSession addOutput:self.microOutput];
     }
 }
 
+- (void)removeInputsOutputs {
+    [self.captureSession beginConfiguration];
+    
+    if (self.cameraInput) {
+        [self.captureSession removeInput:self.cameraInput];
+        self.cameraInput = nil;
+    }
+    
+    if (self.microInput) {
+        [self.captureSession removeInput:self.microInput];
+        self.microInput = nil;
+    }
+    
+    if (self.cameraOutput) {
+        [self.captureSession removeOutput:self.cameraOutput];
+        self.cameraOutput = nil;
+    }
+    
+    if (self.microOutput) {
+        [self.captureSession removeOutput:self.microOutput];
+        self.microOutput = nil;
+    }
+    
+    if (self.photoOutput) {
+        [self.captureSession removeOutput:self.photoOutput];
+        self.photoOutput = nil;
+    }
+    
+    [self.captureSession commitConfiguration];
+}
+
+- (void)switchCameraAnimation {
+    CATransition *switchAnimation = [CATransition animation];
+    switchAnimation.delegate = self;
+    switchAnimation.duration = 0.45f;
+    switchAnimation.type = @"oglFlip";
+    switchAnimation.subtype = [self isFrontFacingCameraPreset] ? kCATransitionFromRight : kCATransitionFromLeft;
+    switchAnimation.timingFunction = UIViewAnimationCurveEaseInOut;
+    [self.previewLayer addAnimation:switchAnimation forKey:@"changeAnimation"];
+}
+
+- (void)animationDidStart:(CAAnimation *)anim {
+    self.cameraConnection.videoOrientation = AVCaptureVideoOrientationPortrait;
+    [self.captureSession startRunning];
+}
+
 #pragma mark - Getter
+
+- (NSString *)videoPath {
+    return [TYRecordHelper videoPath];
+}
+
+#pragma mark - Lazy Load
 
 - (AVCaptureSession *)captureSession {
     if (!_captureSession) {
@@ -190,6 +356,7 @@
 - (AVCaptureConnection *)cameraConnection {
     if (!_cameraConnection) {
         _cameraConnection = [self.cameraOutput connectionWithMediaType:AVMediaTypeVideo];
+        _cameraConnection.videoOrientation = AVCaptureVideoOrientationPortrait;
     }
     return _cameraConnection;
 }
@@ -208,8 +375,12 @@
     return _captureQueue;
 }
 
-- (NSString *)videoPath {
-    return [TYRecordHelper videoPath];
+- (TYRecordEncoder *)recordEncoder {
+    if (!_recordEncoder) {
+        self.filePath  = [TYRecordHelper videoPath];
+        _recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath];
+    }
+    return _recordEncoder;
 }
 
 @end
