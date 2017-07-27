@@ -10,13 +10,13 @@
 #import "TYRecordEncoder.h"
 #import "TYRecordHelper.h"
 
-@interface TYRecordEngine () <AVCaptureVideoDataOutputSampleBufferDelegate, CAAnimationDelegate>
+@interface TYRecordEngine () <AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate, CAAnimationDelegate>
 
 @property (nonatomic, strong) AVCaptureSession *captureSession;
 @property (nonatomic, strong) AVCaptureDeviceInput *cameraInput;
 @property (nonatomic, strong) AVCaptureDeviceInput *microInput;
 @property (nonatomic, strong) AVCaptureVideoDataOutput *cameraOutput;
-@property (nonatomic, strong) AVCaptureVideoDataOutput *microOutput;
+@property (nonatomic, strong) AVCaptureAudioDataOutput *microOutput;
 @property (nonatomic, strong) AVCaptureStillImageOutput *photoOutput;
 @property (nonatomic, strong) AVCaptureConnection *cameraConnection;
 @property (nonatomic, strong) AVCaptureConnection *microConnection;
@@ -26,9 +26,10 @@
 
 @property (nonatomic, strong) dispatch_queue_t captureQueue;
 @property (nonatomic, strong) NSDate *startCaptureTime;
-@property (nonatomic, assign) NSTimeInterval currentRecordTime;
 @property (atomic, assign) BOOL isCapturing;
 @property (nonatomic, strong) NSMutableArray *videosPath;
+@property (nonatomic, assign) NSTimeInterval videoDuration;
+@property (nonatomic, assign) CMSampleBufferRef temSample;
 
 @end
 
@@ -36,6 +37,10 @@
     NSString *_presetName;
     AVCaptureDevicePosition _position;
     TYRecordEngineType _recordType;
+    Float64 _rate;
+    UInt32 _channel;
+    int _videoW;
+    int _videoH;
 }
 
 #pragma mark - Initialization Functions
@@ -44,6 +49,10 @@
     if (self = [super init]) {
         _maxRecordTime = 60.f;
         _minRecordTime = 3.f;
+        _videoW = 720;
+        _videoH = 1280;
+        _rate = 44100;
+        _channel = 1;
     }
     return self;
 }
@@ -51,10 +60,11 @@
 - (instancetype)initRecordEngineSessionPreset:(NSString *)preset
                                devicePosition:(AVCaptureDevicePosition)position
                                    recordType:(TYRecordEngineType)recordType {
-    if (self = [super init]) {
+    if (self = [self init]) {
         _presetName = preset;
         _position = position;
         _recordType = recordType;
+        [self addInputOutput];
     }
     return self;
 }
@@ -67,21 +77,14 @@
     }
     
     [self removeInputsOutputs];
-    if (self.cameraOutput) {
-        [self.cameraOutput setSampleBufferDelegate:nil queue:dispatch_get_main_queue()];
-    }
-    
-    if (self.microOutput) {
-        [self.microOutput setSampleBufferDelegate:nil queue:dispatch_get_main_queue()];
-    }
+    self.captureQueue = nil;
+    NSLog(@"%@ %@",[self class], NSStringFromSelector(_cmd));
 }
 
 #pragma mark - Public Functions
 
 - (void)openRecordFunctions {
     if (![self.captureSession isRunning]) {
-        self.startCaptureTime = [NSDate date];
-        [self addInputOutput];
         [self.captureSession startRunning];
     }
 }
@@ -95,10 +98,24 @@
 
 - (void)startRecord {
     self.isCapturing = YES;
+    self.startCaptureTime = [NSDate date];
 }
 
 - (void)stopRecord {
     self.isCapturing = NO;
+    [self.recordEncoder encoderFinishCompletionHandler:^{
+        self.recordEncoder = nil;
+        self.videoDuration += [self dateComponentFromDate:self.startCaptureTime toDate:[NSDate date]].second;
+        if (self.videoDuration < self.minRecordTime) {
+            if (self.delegate && [self.delegate respondsToSelector:@selector(recordDurationLessMinRecordDuration)]) {
+                [self.delegate recordDurationLessMinRecordDuration];
+            }
+        } else if (self.videoDuration >= self.maxRecordTime) {
+            if (self.delegate && [self.delegate respondsToSelector:@selector(recordDurationLargerEqualMaxRecordDuration)]) {
+                [self.delegate recordDurationLargerEqualMaxRecordDuration];
+            }
+        }
+    }];
 }
 
 - (void)switchCamera {
@@ -135,8 +152,31 @@
     
 }
 
-- (void)finishCaptureHandler:(void (^)(UIImage *, NSString *, NSTimeInterval))handler {
-    
+- (void)finishCaptureHandler:(void (^)(UIImage *, NSString *, NSTimeInterval))handler failure:(void (^)(NSError *))failure {
+    NSMutableArray *avassets = [NSMutableArray array];
+    for (NSString *videoPath in self.videosPath) {
+        AVAsset *asset = [AVAsset assetWithURL:[NSURL fileURLWithPath:videoPath]];
+        [avassets addObject:asset];
+    }
+    AVMutableComposition *compisition = [TYRecordHelper combineVideosWithAssetArray:avassets];
+    [TYRecordHelper transformFormatToMp4WithAsset:compisition presetName:AVAssetExportPreset1280x720 success:^(UIImage *coverImage, NSString *filePath) {
+        for (NSString *videoPath in self.videosPath) {
+            NSError *error = nil;
+            [[NSFileManager defaultManager] removeItemAtPath:videoPath error:&error];
+            if (error) {
+                NSLog(@"Remove Video Failure! Error:%@", error);
+            }
+        }
+        if (handler) {
+            handler(coverImage, filePath, self.videoDuration);
+        }
+        self.videoDuration = 0;
+        [self.videosPath removeAllObjects];
+    } failure:^(NSError *error) {
+        if (failure) {
+            failure(error);
+        }
+    }];
 }
 
 - (void)finishTakePhotoHandler:(void (^)(UIImage *))handler {
@@ -159,10 +199,27 @@
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
-    if (self.isCapturing) {
-        [self.recordEncoder encoderFrame:sampleBuffer];
-    } else {
-        self.recordEncoder = nil;
+    NSLog(@"有数据");
+    if ([self.cameraConnection isVideoMirroringSupported]) {
+        [self.cameraConnection setVideoMirrored:[self isFrontFacingCameraPreset]];
+    }
+    if (self.isCapturing  && connection == self.cameraConnection) {
+        NSLog(@"正在写");
+        NSDate *currentDate = [NSDate date];
+        NSInteger currentSecond = [self dateComponentFromDate:self.startCaptureTime toDate:currentDate].second;
+        
+        if (self.delegate && [self.delegate respondsToSelector:@selector(recordProgress:)]) {
+            [self.delegate recordProgress:currentSecond];
+        }
+        
+        if (currentSecond > (self.maxRecordTime - self.videoDuration)) {
+            [self stopRecord];
+            return;
+        }
+        [self.recordEncoder encoderFrame:sampleBuffer isVideo:YES];
+    }
+    if (connection == self.microConnection && self.isCapturing) {
+        [self.recordEncoder encoderFrame:sampleBuffer isVideo:NO];
     }
 }
 
@@ -192,6 +249,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     switch (_recordType) {
         case TYRecordEngineTypeBoth: {
             [self addVideoInputOutput];
+            if ([self.captureSession canAddOutput:self.photoOutput]) {
+                [self.captureSession addOutput:self.photoOutput];
+            }
         }
             break;
             
@@ -212,6 +272,11 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
     
     [self.captureSession commitConfiguration];
+}
+
+- (NSDateComponents *)dateComponentFromDate:(NSDate *)startDate toDate:( NSDate *)resultDate {
+    NSCalendar *calendar = [NSCalendar currentCalendar];
+    return [calendar components:NSCalendarUnitSecond fromDate:startDate toDate:resultDate options:0];
 }
 
 - (void)addVideoInputOutput {
@@ -304,11 +369,11 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (AVCaptureDeviceInput *)microInput {
     if (!_microInput) {
-        AVCaptureDevice *device = [AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio].firstObject;
-        NSError *error = nil;
-        _microInput = [[AVCaptureDeviceInput alloc] initWithDevice:device error:&error];
+        AVCaptureDevice *mic = [AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio].firstObject;
+        NSError *error;
+        _microInput = [AVCaptureDeviceInput deviceInputWithDevice:mic error:&error];
         if (error) {
-            NSLog(@"Get MircoInput Failure! Error:%@", error);
+            NSLog(@"获取麦克风失败~");
         }
     }
     return _microInput;
@@ -317,18 +382,18 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (AVCaptureVideoDataOutput *)cameraOutput {
     if (!_cameraOutput) {
         _cameraOutput = [[AVCaptureVideoDataOutput alloc] init];
+        [_cameraOutput setSampleBufferDelegate:self queue:self.captureQueue];
         NSDictionary* setting = [NSDictionary dictionaryWithObjectsAndKeys:
                                         [NSNumber numberWithInt:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange], kCVPixelBufferPixelFormatTypeKey,
                                         nil];
         _cameraOutput.videoSettings = setting;
-        [_cameraOutput setSampleBufferDelegate:self queue:self.captureQueue];
     }
     return _cameraOutput;
 }
 
-- (AVCaptureVideoDataOutput *)microOutput {
-    if (_microOutput) {
-        _microOutput = [[AVCaptureVideoDataOutput alloc] init];
+- (AVCaptureAudioDataOutput *)microOutput {
+    if (!_microOutput) {
+        _microOutput = [[AVCaptureAudioDataOutput alloc] init];
         [_microOutput setSampleBufferDelegate:self queue:self.captureQueue];
     }
     return _microOutput;
@@ -369,7 +434,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (!_recordEncoder) {
         self.filePath  = [TYRecordHelper videoPath];
         [self.videosPath addObject:self.filePath];
-        _recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath];
+        _recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath videoWidth:_videoW videoHeight:_videoH audioChannel:_channel audioRate:_rate];
     }
     return _recordEncoder;
 }

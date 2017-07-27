@@ -16,7 +16,7 @@
     NSString *videoDirectory = [NSTemporaryDirectory() stringByAppendingString:@"Videos"];
     NSFileManager *fileM = [NSFileManager defaultManager];
     BOOL isDirectory = NO;
-    BOOL isExist = ![fileM fileExistsAtPath:videoDirectory isDirectory:&isDirectory];
+    BOOL isExist = [fileM fileExistsAtPath:videoDirectory isDirectory:&isDirectory];
     if (!isDirectory && !isExist) {
         NSError *error = nil;
         BOOL result = [fileM createDirectoryAtPath:videoDirectory withIntermediateDirectories:YES attributes:nil error:&error];
@@ -25,17 +25,32 @@
             return nil;
         }
     }
-    return [videoDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%f.mp4",[[NSDate date] timeIntervalSince1970]]];
+    return [videoDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%zd.mp4",(int)[[NSDate date] timeIntervalSince1970]]];
 }
 
-+ (void)transformFormatToMp4:(NSString *)mediaPath
-                  presetName:(NSString *)presetName
-                     success:(void (^)(UIImage *, NSString *))success
-                     failure:(void (^)(NSError *))failure {
++ (void)transformFormatToMp4WithPath:(NSString *)mediaPath presetName:(NSString *)presetName success:(void (^)(UIImage *, NSString *))success failure:(void (^)(NSError *))failure {
     AVAsset *asset = [AVAsset assetWithURL:[NSURL fileURLWithPath:mediaPath]];
+    [self transformFormatToMp4WithAsset:asset presetName:presetName success:^(UIImage *coverImage, NSString *filePath) {
+        if (success) {
+            success(coverImage, filePath);
+        }
+    } failure:^(NSError *error) {
+        if (failure) {
+            failure(error);
+        }
+    }];
+}
+
++ (void)transformFormatToMp4WithAsset:(AVAsset *)asset
+                           presetName:(NSString *)presetName
+                              success:(void (^)(UIImage *, NSString *))success
+                              failure:(void (^)(NSError *))failure {
+    
     AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:asset presetName:presetName];
     exportSession.shouldOptimizeForNetworkUse = YES;
-    exportSession.outputURL = [NSURL fileURLWithPath:self.videoPath];
+    exportSession.outputFileType = AVFileTypeMPEG4;
+    NSString *finalPath = [self videoPath];
+    exportSession.outputURL = [NSURL fileURLWithPath:finalPath];
     [exportSession exportAsynchronouslyWithCompletionHandler:^{
         if (exportSession.error) {
             if (failure) {
@@ -43,9 +58,10 @@
             }
             return;
         }
-        [self videoCoverImage:self.videoPath success:^(UIImage *coverImage) {
+        [self videoCoverImage:finalPath success:^(UIImage *coverImage) {
             if (success) {
-                success(coverImage, self.videoPath);
+                NSLog(@"%zd",coverImage.imageOrientation);
+                success(coverImage, finalPath);
             }
         } failure:^(NSError *error) {
             if (failure) {
@@ -66,13 +82,17 @@
     [imageGenerator generateCGImagesAsynchronouslyForTimes:[NSArray arrayWithObject:[NSValue valueWithCMTime:thumbTime]] completionHandler:^(CMTime requestedTime, CGImageRef  _Nullable image, CMTime actualTime, AVAssetImageGeneratorResult result, NSError * _Nullable error) {
         if (error) {
             if (failure) {
-                failure(error);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                   failure(error);
+                });
             }
             return;
         }
         UIImage *coverImage = [UIImage imageWithCGImage:image];
         if (success) {
-            success(coverImage);
+            dispatch_async(dispatch_get_main_queue(), ^{
+               success(coverImage);
+            });
         }
     }];
 }

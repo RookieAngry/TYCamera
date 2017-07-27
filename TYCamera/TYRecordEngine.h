@@ -13,6 +13,10 @@
 
 @optional
 
+- (void)recordDurationLessMinRecordDuration;
+
+- (void)recordDurationLargerEqualMaxRecordDuration;
+
 - (void)recordProgress:(NSTimeInterval)progress;
 
 @end
@@ -66,8 +70,9 @@ typedef NS_ENUM(NSUInteger, TYRecordEngineType) {
  完成视频录制
 
  @param handler 视频录制成功后，返回视频封面图,视频存储的路径以及视频时长
+ @param failure 视频录制失败返回的错误
  */
-- (void)finishCaptureHandler:(void(^)(UIImage *coverImage, NSString *filePath, NSTimeInterval duration))handler;
+- (void)finishCaptureHandler:(void(^)(UIImage *coverImage, NSString *filePath, NSTimeInterval duration))handler failure:(void(^)(NSError *error))failure;
 
 /**
  完成拍照

@@ -27,10 +27,23 @@
  @param success 转换成功的回调（封面图， 转换后的视频地址）
  @param failure 转换失败后的回调
  */
-+ (void)transformFormatToMp4:(NSString *)mediaPath
++ (void)transformFormatToMp4WithPath:(NSString *)mediaPath
                   presetName:(NSString *)presetName
                      success:(void(^)(UIImage *coverImage, NSString *filePath))success
                      failure:(void(^)(NSError *error))failure;
+
+/**
+ 将视频转换为MP4格式
+
+ @param asset 视频文件资源对象
+ @param presetName 转换后的视频质量
+ @param success 转换成功的回调（封面图， 转换后的视频地址）
+ @param failure 转换失败后的回调
+ */
++ (void)transformFormatToMp4WithAsset:(AVAsset *)asset
+                             presetName:(NSString *)presetName
+                                success:(void (^)(UIImage *coverImage, NSString *filePath))success
+                                failure:(void (^)(NSError *error))failure;
 
 /**
  获取视频封面图（第一帧）
