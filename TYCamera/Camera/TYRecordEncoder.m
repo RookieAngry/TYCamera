@@ -107,7 +107,6 @@
                                   @(_channel), AVNumberOfChannelsKey,
                                   @(_rate), AVSampleRateKey,
                                   nil];
-        NSLog(@"setting:%@", setting);
         _audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:setting];
         _audioInput.expectsMediaDataInRealTime = YES;
     }

@@ -105,11 +105,15 @@
         self.videoDuration += [self dateComponentFromDate:self.startCaptureTime toDate:[NSDate date]].second;
         if (self.videoDuration < self.minRecordTime) {
             if (self.delegate && [self.delegate respondsToSelector:@selector(recordDurationLessMinRecordDuration)]) {
-                [self.delegate recordDurationLessMinRecordDuration];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                   [self.delegate recordDurationLessMinRecordDuration];
+                });
             }
         } else if (self.videoDuration >= self.maxRecordTime) {
             if (self.delegate && [self.delegate respondsToSelector:@selector(recordDurationLargerEqualMaxRecordDuration)]) {
-                [self.delegate recordDurationLargerEqualMaxRecordDuration];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                   [self.delegate recordDurationLargerEqualMaxRecordDuration]; 
+                });
             }
         }
     }];
@@ -177,8 +181,10 @@
 }
 
 - (void)finishTakePhotoHandler:(void (^)(UIImage *))handler {
-    self.cameraConnection.videoMirrored = [self isFrontFacingCameraPreset];
-    [self.photoOutput captureStillImageAsynchronouslyFromConnection:self.cameraConnection completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
+    AVCaptureConnection *captureConnection = [self.photoOutput connectionWithMediaType:AVMediaTypeVideo];
+    [captureConnection setVideoMirrored:[self isFrontFacingCameraPreset]];
+    [self.photoOutput captureStillImageAsynchronouslyFromConnection:[self.photoOutput connectionWithMediaType:AVMediaTypeVideo]
+                                                  completionHandler:^(CMSampleBufferRef imageDataSampleBuffer, NSError *error) {
         if (!error && imageDataSampleBuffer) {
             NSData *photoData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
             UIImage *photo = [UIImage imageWithData:photoData];
@@ -196,11 +202,8 @@
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
-    if (!self.isCapturing) {  return; }
     
-    if ([self.cameraConnection isVideoMirroringSupported]) {
-        [self.cameraConnection setVideoMirrored:[self isFrontFacingCameraPreset]];
-    }
+    if (!self.isCapturing) {  return; }
     
     if (!self.recordEncoder && captureOutput == self.microOutput) {
         self.filePath  = [TYRecordHelper videoPath];
@@ -213,7 +216,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     NSInteger currentSecond = [self dateComponentFromDate:self.startCaptureTime toDate:currentDate].second;
     
     if (self.delegate && [self.delegate respondsToSelector:@selector(recordProgress:)]) {
-        [self.delegate recordProgress:currentSecond];
+        dispatch_async(dispatch_get_main_queue(), ^{
+           [self.delegate recordProgress:currentSecond];
+        });
     }
     
     if (currentSecond > (self.maxRecordTime - self.videoDuration)) {
@@ -221,13 +226,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         return;
     }
     [self.recordEncoder encoderFrame:sampleBuffer isVideo:captureOutput != self.microOutput];
-}
-
-- (void)setAudioFormat:(CMSampleBufferRef)sampleBuffer {
-    CMFormatDescriptionRef fmt = CMSampleBufferGetFormatDescription(sampleBuffer);
-    const AudioStreamBasicDescription *asbd = CMAudioFormatDescriptionGetStreamBasicDescription(fmt);
-    _rate = asbd->mSampleRate;
-    _channel = asbd->mChannelsPerFrame;
 }
 
 #pragma mark - Tool Functions
@@ -298,6 +296,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if ([self.captureSession canAddOutput:self.microOutput]) {
         [self.captureSession addOutput:self.microOutput];
     }
+    
+    self.cameraConnection.videoOrientation = AVCaptureVideoOrientationPortrait;
 }
 
 - (void)removeInputsOutputs {
@@ -346,6 +346,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [self.captureSession startRunning];
 }
 
+- (void)setAudioFormat:(CMSampleBufferRef)sampleBuffer {
+    CMFormatDescriptionRef fmt = CMSampleBufferGetFormatDescription(sampleBuffer);
+    const AudioStreamBasicDescription *asbd = CMAudioFormatDescriptionGetStreamBasicDescription(fmt);
+    _rate = asbd->mSampleRate;
+    _channel = asbd->mChannelsPerFrame;
+}
+
 #pragma mark - Lazy Load
 
 - (AVCaptureSession *)captureSession {
@@ -380,7 +387,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         NSError *error;
         _microInput = [AVCaptureDeviceInput deviceInputWithDevice:mic error:&error];
         if (error) {
-            NSLog(@"获取麦克风失败~");
+            NSLog(@"Get microInput Failure! Error:%@", error);
         }
     }
     return _microInput;
@@ -416,10 +423,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 - (AVCaptureConnection *)cameraConnection {
-    if (!_cameraConnection) {
-        _cameraConnection = [self.cameraOutput connectionWithMediaType:AVMediaTypeVideo];
-        _cameraConnection.videoOrientation = AVCaptureVideoOrientationPortrait;
-    }
+    _cameraConnection = [self.cameraOutput connectionWithMediaType:AVMediaTypeVideo];
     return _cameraConnection;
 }
 
@@ -436,15 +440,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
     return _captureQueue;
 }
-
-//- (TYRecordEncoder *)recordEncoder {
-//    if (!_recordEncoder) {
-//        self.filePath  = [TYRecordHelper videoPath];
-//        [self.videosPath addObject:self.filePath];
-//        _recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath videoWidth:_videoW videoHeight:_videoH audioChannel:_channel audioRate:_rate];
-//    }
-//    return _recordEncoder;
-//}
 
 - (NSMutableArray *)videosPath {
     if (!_videosPath) {

@@ -17,6 +17,7 @@
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     TYCameraVC *cameravc = [[TYCameraVC alloc] init];
+//    cameravc.type = TYCameraVCTypeVideo;
     [self.navigationController pushViewController:cameravc animated:YES];
 }
 

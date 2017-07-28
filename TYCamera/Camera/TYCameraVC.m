@@ -22,6 +22,8 @@
 
 @property (nonatomic, strong) AVPlayerLayer *playerLayer;
 
+@property (nonatomic, strong) UILabel *progressLabel;
+
 @end
 
 @implementation TYCameraVC
@@ -37,21 +39,30 @@
     self.recordEngine.previewLayer.frame = self.view.bounds;
     
     [self.view addSubview:self.recordBtn];
-    self.recordBtn.frame = CGRectMake(0, 100, 100, 100);
+    self.recordBtn.frame = CGRectMake(0, 100, 100, 50);
     
     UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
     [btn setTitle:@"完成录制" forState:UIControlStateNormal];
     [btn addTarget:self action:@selector(btnClick) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:btn];
-    btn.frame = CGRectMake(0, 250, 100, 100);
+    btn.frame = CGRectMake(0, 160, 100, 50);
     btn.backgroundColor = [UIColor redColor];
     
     UIButton *switchbtn = [UIButton buttonWithType:UIButtonTypeCustom];
     [switchbtn setTitle:@"切换摄像头" forState:UIControlStateNormal];
     [switchbtn addTarget:self action:@selector(switchbtnClick) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:switchbtn];
-    switchbtn.frame = CGRectMake(0, 400, 100, 100);
+    switchbtn.frame = CGRectMake(0, 220, 100, 50);
     switchbtn.backgroundColor = [UIColor orangeColor];
+    
+    UIButton *takePhotoBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 280, 100, 50)];
+    [takePhotoBtn setTitle:@"拍照" forState:UIControlStateNormal];
+    takePhotoBtn.backgroundColor = [UIColor purpleColor];
+    [takePhotoBtn addTarget:self action:@selector(takephotoBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:takePhotoBtn];
+    
+    [self.view addSubview:self.progressLabel];
+    self.progressLabel.frame = CGRectMake(0, 340, 100, 50);
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -92,6 +103,14 @@
     }];
 }
 
+- (void)takephotoBtnClick {
+    [self.recordEngine finishTakePhotoHandler:^(UIImage *photo) {
+        UIImageView *imgview = [[UIImageView alloc] initWithFrame:CGRectMake(100, 400, 200, 200)];
+        imgview.image = photo;
+        [self.view addSubview:imgview];
+    }];
+}
+
 - (void)recordBtnClick {
     self.recordBtn.selected = !self.recordBtn.selected;
     self.recordBtn.selected ? [self.recordEngine startRecord] : [self.recordEngine stopRecord];
@@ -104,7 +123,7 @@
 #pragma mark - TYRecordEngineDelegate
 
 - (void)recordProgress:(NSTimeInterval)progress {
-    NSLog(@"progress:%f", progress);
+    self.progressLabel.text = [NSString stringWithFormat:@"%f", progress];
 }
 
 - (void)recordDurationLessMinRecordDuration {
@@ -119,7 +138,7 @@
 
 - (TYRecordEngine *)recordEngine {
     if (!_recordEngine) {
-        _recordEngine = [[TYRecordEngine alloc] initRecordEngineSessionPreset:AVCaptureSessionPresetHigh devicePosition:AVCaptureDevicePositionFront recordType:TYRecordEngineTypeBoth];
+        _recordEngine = [[TYRecordEngine alloc] initRecordEngineSessionPreset:AVCaptureSessionPresetHigh devicePosition:AVCaptureDevicePositionFront recordType:(TYRecordEngineType)self.type];
         _recordEngine.delegate = self;
     }
     return _recordEngine;
@@ -141,6 +160,14 @@
         _pressGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(pressGestureAction)];
     }
     return _pressGesture;
+}
+
+- (UILabel *)progressLabel {
+    if (!_progressLabel) {
+        _progressLabel = [[UILabel alloc] init];
+        _progressLabel.backgroundColor = [UIColor blueColor];
+    }
+    return _progressLabel;
 }
 
 @end
