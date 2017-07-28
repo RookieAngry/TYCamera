@@ -21,31 +21,23 @@
     NSString *_filePath;
     int _videoW;
     int _videoH;
-    Float64 _channel;
-    UInt32 _rate;
+    UInt32 _channel;
+    Float64 _rate;
 }
 
 #pragma mark - Initialization
 
-+ (instancetype)recordEncoderPath:(NSString *)filePath videoWidth:(int)videoWidth videoHeight:(int)videoHeight audioChannel:(Float64)channel audioRate:(UInt32)rate {
++ (instancetype)recordEncoderPath:(NSString *)filePath videoWidth:(int)videoWidth videoHeight:(int)videoHeight audioChannel:(UInt32)channel audioRate:(Float64)rate {
     return [[[self class] alloc] initPath:filePath videoWidth:videoWidth videoHeight:videoHeight audioChannel:channel audioRate:rate];
 }
 
-- (instancetype)initPath:(NSString *)filePath videoWidth:(int)videoWidth videoHeight:(int)videoHeight audioChannel:(Float64)channel audioRate:(UInt32)rate {
+- (instancetype)initPath:(NSString *)filePath videoWidth:(int)videoWidth videoHeight:(int)videoHeight audioChannel:(UInt32)channel audioRate:(Float64)rate {
     if (self = [super init]) {
         _filePath = filePath;
         _videoW = videoWidth;
         _videoH = videoHeight;
         _channel = channel;
         _rate = rate;
-        
-        if ([self.cameraWriter canAddInput:self.videoInput]) {
-            [self.cameraWriter addInput:self.videoInput];
-        }
-        
-        if ([self.cameraWriter canAddInput:self.audioInput]) {
-            [self.cameraWriter addInput:self.audioInput];
-        }
     }
     return self;
 }
@@ -53,11 +45,21 @@
 #pragma mark - Public Functions
 
 - (void)encoderFrame:(CMSampleBufferRef)sampleBuffer isVideo:(BOOL)isVideo {
-    if (self.cameraWriter.status == AVAssetWriterStatusUnknown) {
-        [self.cameraWriter startWriting];
-        [self.cameraWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
-    }
-    if (self.cameraWriter.status == AVAssetWriterStatusWriting) {
+    if (CMSampleBufferDataIsReady(sampleBuffer)) {
+        if (self.cameraWriter.status == AVAssetWriterStatusUnknown) {
+            
+            if ([self.cameraWriter canAddInput:self.videoInput]) {
+                [self.cameraWriter addInput:self.videoInput];
+            }
+            
+            if ([self.cameraWriter canAddInput:self.audioInput]) {
+                [self.cameraWriter addInput:self.audioInput];
+            }
+            
+            [self.cameraWriter startWriting];
+            [self.cameraWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
+        }
+        
         if (self.videoInput.isReadyForMoreMediaData && isVideo) {
             [self.videoInput appendSampleBuffer:sampleBuffer];
         }
@@ -80,8 +82,6 @@
         _cameraWriter = [[AVAssetWriter alloc] initWithURL:[NSURL fileURLWithPath:_filePath] fileType:AVFileTypeMPEG4 error:&error];
         if (error) {
             NSLog(@"Create CameraWriter Failure! Error:%@", error);
-        } else {
-            [_cameraWriter addInput:self.videoInput];
         }
     }
     return _cameraWriter;
@@ -103,11 +103,11 @@
 - (AVAssetWriterInput *)audioInput {
     if (!_audioInput) {
         NSDictionary *setting = [NSDictionary dictionaryWithObjectsAndKeys:
-                                 [NSNumber numberWithInt: kAudioFormatMPEG4AAC], AVFormatIDKey,
-                                 [NSNumber numberWithInt: 128000], AVEncoderBitRateKey,
-                                 [NSNumber numberWithInt: _channel], AVNumberOfChannelsKey,
-                                 [NSNumber numberWithFloat: _rate], AVSampleRateKey,
-                                 nil];
+                                  @(kAudioFormatMPEG4AAC), AVFormatIDKey,
+                                  @(_channel), AVNumberOfChannelsKey,
+                                  @(_rate), AVSampleRateKey,
+                                  nil];
+        NSLog(@"setting:%@", setting);
         _audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:setting];
         _audioInput.expectsMediaDataInRealTime = YES;
     }

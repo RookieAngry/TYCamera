@@ -29,7 +29,6 @@
 @property (atomic, assign) BOOL isCapturing;
 @property (nonatomic, strong) NSMutableArray *videosPath;
 @property (nonatomic, assign) NSTimeInterval videoDuration;
-@property (nonatomic, assign) CMSampleBufferRef temSample;
 
 @end
 
@@ -51,8 +50,6 @@
         _minRecordTime = 3.f;
         _videoW = 720;
         _videoH = 1280;
-        _rate = 44100;
-        _channel = 1;
     }
     return self;
 }
@@ -199,28 +196,38 @@
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
-    NSLog(@"有数据");
+    if (!self.isCapturing) {  return; }
+    
     if ([self.cameraConnection isVideoMirroringSupported]) {
         [self.cameraConnection setVideoMirrored:[self isFrontFacingCameraPreset]];
     }
-    if (self.isCapturing  && connection == self.cameraConnection) {
-        NSLog(@"正在写");
-        NSDate *currentDate = [NSDate date];
-        NSInteger currentSecond = [self dateComponentFromDate:self.startCaptureTime toDate:currentDate].second;
-        
-        if (self.delegate && [self.delegate respondsToSelector:@selector(recordProgress:)]) {
-            [self.delegate recordProgress:currentSecond];
-        }
-        
-        if (currentSecond > (self.maxRecordTime - self.videoDuration)) {
-            [self stopRecord];
-            return;
-        }
-        [self.recordEncoder encoderFrame:sampleBuffer isVideo:YES];
+    
+    if (!self.recordEncoder && captureOutput == self.microOutput) {
+        self.filePath  = [TYRecordHelper videoPath];
+        [self.videosPath addObject:self.filePath];
+        [self setAudioFormat:sampleBuffer];
+        self.recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath videoWidth:_videoW videoHeight:_videoH audioChannel:_channel audioRate:_rate];
     }
-    if (connection == self.microConnection && self.isCapturing) {
-        [self.recordEncoder encoderFrame:sampleBuffer isVideo:NO];
+    
+    NSDate *currentDate = [NSDate date];
+    NSInteger currentSecond = [self dateComponentFromDate:self.startCaptureTime toDate:currentDate].second;
+    
+    if (self.delegate && [self.delegate respondsToSelector:@selector(recordProgress:)]) {
+        [self.delegate recordProgress:currentSecond];
     }
+    
+    if (currentSecond > (self.maxRecordTime - self.videoDuration)) {
+        [self stopRecord];
+        return;
+    }
+    [self.recordEncoder encoderFrame:sampleBuffer isVideo:captureOutput != self.microOutput];
+}
+
+- (void)setAudioFormat:(CMSampleBufferRef)sampleBuffer {
+    CMFormatDescriptionRef fmt = CMSampleBufferGetFormatDescription(sampleBuffer);
+    const AudioStreamBasicDescription *asbd = CMAudioFormatDescriptionGetStreamBasicDescription(fmt);
+    _rate = asbd->mSampleRate;
+    _channel = asbd->mChannelsPerFrame;
 }
 
 #pragma mark - Tool Functions
@@ -369,7 +376,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (AVCaptureDeviceInput *)microInput {
     if (!_microInput) {
-        AVCaptureDevice *mic = [AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio].firstObject;
+        AVCaptureDevice *mic = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
         NSError *error;
         _microInput = [AVCaptureDeviceInput deviceInputWithDevice:mic error:&error];
         if (error) {
@@ -430,14 +437,14 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     return _captureQueue;
 }
 
-- (TYRecordEncoder *)recordEncoder {
-    if (!_recordEncoder) {
-        self.filePath  = [TYRecordHelper videoPath];
-        [self.videosPath addObject:self.filePath];
-        _recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath videoWidth:_videoW videoHeight:_videoH audioChannel:_channel audioRate:_rate];
-    }
-    return _recordEncoder;
-}
+//- (TYRecordEncoder *)recordEncoder {
+//    if (!_recordEncoder) {
+//        self.filePath  = [TYRecordHelper videoPath];
+//        [self.videosPath addObject:self.filePath];
+//        _recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath videoWidth:_videoW videoHeight:_videoH audioChannel:_channel audioRate:_rate];
+//    }
+//    return _recordEncoder;
+//}
 
 - (NSMutableArray *)videosPath {
     if (!_videosPath) {

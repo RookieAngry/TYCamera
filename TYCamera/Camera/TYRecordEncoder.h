@@ -11,9 +11,9 @@
 
 @interface TYRecordEncoder : NSObject
 
-+ (instancetype)recordEncoderPath:(NSString *)filePath videoWidth:(int)videoWidth videoHeight:(int)videoHeight audioChannel:(Float64)channel audioRate:(UInt32)rate;
++ (instancetype)recordEncoderPath:(NSString *)filePath videoWidth:(int)videoWidth videoHeight:(int)videoHeight audioChannel:(UInt32)channel audioRate:(Float64)rate;
 
-- (instancetype)initPath:(NSString *)filePath videoWidth:(int)videoWidth videoHeight:(int)videoHeight audioChannel:(Float64)channel audioRate:(UInt32)rate;
+- (instancetype)initPath:(NSString *)filePath videoWidth:(int)videoWidth videoHeight:(int)videoHeight audioChannel:(UInt32)channel audioRate:(Float64)rate;
 
 - (void)encoderFrame:(CMSampleBufferRef)sampleBuffer isVideo:(BOOL)isVideo;
 

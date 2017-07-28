@@ -165,7 +165,7 @@
 				A766BBB51F262882004D9A81 /* TYRecordHelper.h */,
 				A766BBB61F262882004D9A81 /* TYRecordHelper.m */,
 			);
-			name = Camera;
+			path = Camera;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

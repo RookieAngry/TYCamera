@@ -8,6 +8,7 @@
 
 #import "TYCameraVC.h"
 #import "TYRecordEngine.h"
+#import <MediaPlayer/MediaPlayer.h>
 
 @interface TYCameraVC () <TYRecordEngineDelegate>
 
@@ -75,12 +76,12 @@
 
 - (void)btnClick {
     [self.recordEngine finishCaptureHandler:^(UIImage *coverImage, NSString *filePath, NSTimeInterval duration) {
-        NSLog(@"coverImage:%@,filePath:%@,duration:%f", coverImage, filePath, duration);
+        NSLog(@"coverImage:%@,filePath:%@,duration:%f", coverImage, [NSURL fileURLWithPath:filePath], duration);
         AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL fileURLWithPath:filePath]];
         self.player = [AVPlayer playerWithPlayerItem:item];
         self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
         [self.view.layer addSublayer:self.playerLayer];
-        self.playerLayer.frame = CGRectMake(150, 0, 300, 300);
+        self.playerLayer.frame = CGRectMake(100, 100, 250, 250);
         [self.player play];
         
         UIImageView *imgview = [[UIImageView alloc] initWithFrame:CGRectMake(100, 400, 200, 200)];
