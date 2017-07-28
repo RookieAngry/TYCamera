@@ -24,6 +24,8 @@
 
 @property (nonatomic, strong) UILabel *progressLabel;
 
+@property (nonatomic, strong) UIButton *takePhotoBtn;
+
 @end
 
 @implementation TYCameraVC
@@ -55,11 +57,11 @@
     switchbtn.frame = CGRectMake(0, 220, 100, 50);
     switchbtn.backgroundColor = [UIColor orangeColor];
     
-    UIButton *takePhotoBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 280, 100, 50)];
-    [takePhotoBtn setTitle:@"拍照" forState:UIControlStateNormal];
-    takePhotoBtn.backgroundColor = [UIColor purpleColor];
-    [takePhotoBtn addTarget:self action:@selector(takephotoBtnClick) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:takePhotoBtn];
+    self.takePhotoBtn = [[UIButton alloc] initWithFrame:CGRectMake(0, 280, 100, 50)];
+    [_takePhotoBtn setTitle:@"拍照" forState:UIControlStateNormal];
+    _takePhotoBtn.backgroundColor = [UIColor purpleColor];
+    [_takePhotoBtn addTarget:self action:@selector(takephotoBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:_takePhotoBtn];
     
     [self.view addSubview:self.progressLabel];
     self.progressLabel.frame = CGRectMake(0, 340, 100, 50);
@@ -87,7 +89,6 @@
 
 - (void)btnClick {
     [self.recordEngine finishCaptureHandler:^(UIImage *coverImage, NSString *filePath, NSTimeInterval duration) {
-        NSLog(@"coverImage:%@,filePath:%@,duration:%f", coverImage, [NSURL fileURLWithPath:filePath], duration);
         AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL fileURLWithPath:filePath]];
         self.player = [AVPlayer playerWithPlayerItem:item];
         self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
@@ -104,7 +105,9 @@
 }
 
 - (void)takephotoBtnClick {
+    [self.recordEngine openFlashLight:YES];
     [self.recordEngine finishTakePhotoHandler:^(UIImage *photo) {
+        [self.recordEngine openFlashLight:NO];
         UIImageView *imgview = [[UIImageView alloc] initWithFrame:CGRectMake(100, 400, 200, 200)];
         imgview.image = photo;
         [self.view addSubview:imgview];

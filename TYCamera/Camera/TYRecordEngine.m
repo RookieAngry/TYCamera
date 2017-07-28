@@ -195,6 +195,21 @@
     }];
 }
 
+- (void)openFlashLight:(BOOL)open {
+    AVCaptureDevice *backCamera = [self captureDeviceInput:AVCaptureDevicePositionBack];
+    if (backCamera.hasTorch && backCamera.hasFlash) {
+        [backCamera lockForConfiguration:nil];
+        if (open) {
+            backCamera.torchMode = AVCaptureTorchModeOn;
+            backCamera.flashMode = AVCaptureTorchModeOn;
+        } else {
+            backCamera.torchMode = AVCaptureTorchModeOff;
+            backCamera.flashMode = AVCaptureFlashModeOff;
+        }
+        [backCamera unlockForConfiguration];
+    }
+}
+
 #pragma mark - Private Functions
 
 #pragma mark - AVCaptureVideoDataOutputSampleBufferDelegate
