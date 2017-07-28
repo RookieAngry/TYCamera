@@ -89,6 +89,7 @@
 
 - (void)btnClick {
     [self.recordEngine finishCaptureHandler:^(UIImage *coverImage, NSString *filePath, NSTimeInterval duration) {
+        NSLog(@"duration:%f", duration);
         AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL fileURLWithPath:filePath]];
         self.player = [AVPlayer playerWithPlayerItem:item];
         self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];

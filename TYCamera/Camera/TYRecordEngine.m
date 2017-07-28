@@ -23,9 +23,9 @@
 
 @property (nonatomic, strong) TYRecordEncoder *recordEncoder;
 @property (nonatomic, copy) NSString *filePath;
-
+@property (nonatomic, strong) dispatch_source_t timer;
+@property (nonatomic, assign) NSTimeInterval currentDuration;
 @property (nonatomic, strong) dispatch_queue_t captureQueue;
-@property (nonatomic, strong) NSDate *startCaptureTime;
 @property (atomic, assign) BOOL isCapturing;
 @property (nonatomic, strong) NSMutableArray *videosPath;
 @property (nonatomic, assign) NSTimeInterval videoDuration;
@@ -95,14 +95,26 @@
 
 - (void)startRecord {
     self.isCapturing = YES;
-    self.startCaptureTime = [NSDate date];
+    
+    self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, self.captureQueue);
+    dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC, 0 * NSEC_PER_SEC);
+    dispatch_source_set_event_handler(_timer, ^{
+        self.currentDuration += 0.1;
+    });
+    dispatch_resume(_timer);
 }
 
 - (void)stopRecord {
     self.isCapturing = NO;
+    
+    self.videoDuration += self.currentDuration;
+    dispatch_source_cancel(self.timer);
+    self.timer = nil;
+    self.currentDuration = 0.f;
+    
     [self.recordEncoder encoderFinishCompletionHandler:^{
         self.recordEncoder = nil;
-        self.videoDuration += [self dateComponentFromDate:self.startCaptureTime toDate:[NSDate date]].second;
+        
         if (self.videoDuration < self.minRecordTime) {
             if (self.delegate && [self.delegate respondsToSelector:@selector(recordDurationLessMinRecordDuration)]) {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -227,16 +239,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         self.recordEncoder = [TYRecordEncoder recordEncoderPath:self.filePath videoWidth:_videoW videoHeight:_videoH audioChannel:_channel audioRate:_rate];
     }
     
-    NSDate *currentDate = [NSDate date];
-    NSInteger currentSecond = [self dateComponentFromDate:self.startCaptureTime toDate:currentDate].second;
-    
     if (self.delegate && [self.delegate respondsToSelector:@selector(recordProgress:)]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-           [self.delegate recordProgress:currentSecond];
+           [self.delegate recordProgress:self.currentDuration];
         });
     }
     
-    if (currentSecond > (self.maxRecordTime - self.videoDuration)) {
+    if (self.currentDuration > (self.maxRecordTime - self.videoDuration)) {
         [self stopRecord];
         return;
     }
