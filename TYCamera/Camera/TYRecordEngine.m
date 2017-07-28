@@ -29,6 +29,7 @@
 @property (atomic, assign) BOOL isCapturing;
 @property (nonatomic, strong) NSMutableArray *videosPath;
 @property (nonatomic, assign) NSTimeInterval videoDuration;
+@property (nonatomic, strong) NSMutableArray *durations;
 
 @end
 
@@ -108,6 +109,7 @@
     self.isCapturing = NO;
     
     self.videoDuration += self.currentDuration;
+    [self.durations addObject:@(self.currentDuration)];
     dispatch_source_cancel(self.timer);
     self.timer = nil;
     self.currentDuration = 0.f;
@@ -162,7 +164,13 @@
 }
 
 - (void)removeVideoAtIndex:(NSInteger)index {
+    if (index >= self.videosPath.count) {
+        NSLog(@"Index Beyond VideosPath Array Count! Array Count:%zd, index:%zd", self.videosPath.count , index);
+        return;
+    }
     
+    [self.videosPath removeObjectAtIndex:index];
+    self.videoDuration -= [self.durations[index] floatValue];
 }
 
 - (void)finishCaptureHandler:(void (^)(UIImage *, NSString *, NSTimeInterval))handler failure:(void (^)(NSError *))failure {
@@ -470,6 +478,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         _videosPath = [NSMutableArray array];
     }
     return _videosPath;
+}
+
+- (NSMutableArray *)durations {
+    if (!_durations) {
+        _durations = [NSMutableArray array];
+    }
+    return _durations;
 }
 
 @end
