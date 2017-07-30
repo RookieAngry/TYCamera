@@ -17,7 +17,7 @@
 
 - (void)recordDurationLargerEqualMaxRecordDuration;
 
-- (void)recordProgress:(NSTimeInterval)progress;
+- (void)recordProgress:(CGFloat)progress;
 
 @end
 
@@ -82,11 +82,11 @@ typedef NS_ENUM(NSUInteger, TYRecordEngineType) {
 - (void)finishTakePhotoHandler:(void(^)(UIImage *photo))handler;
 
 /**
- 是否开启闪光灯
+ 设置闪光灯的模式
 
- @param open 是否开启
+ @param mode 为闪光灯设置的模式
  */
-- (void)openFlashLight:(BOOL)open;
+- (void)setupFlashLight:(AVCaptureFlashMode)mode;
 
 /**
  切换摄像头

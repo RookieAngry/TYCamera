@@ -7,11 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		66FBC08A1F2B787900B87BF4 /* TYTakePhotoVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 66FBC0891F2B787900B87BF4 /* TYTakePhotoVC.m */; };
+		66FBC08D1F2B788800B87BF4 /* TYTakeVideoVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 66FBC08C1F2B788800B87BF4 /* TYTakeVideoVC.m */; };
+		66FBC0901F2B78AA00B87BF4 /* TYCustomCameraVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 66FBC08F1F2B78AA00B87BF4 /* TYCustomCameraVC.m */; };
+		66FBC0931F2B885200B87BF4 /* TYFlashBtn.m in Sources */ = {isa = PBXBuildFile; fileRef = 66FBC0921F2B885200B87BF4 /* TYFlashBtn.m */; };
+		66FBC0971F2C3D8600B87BF4 /* TYNavigationVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 66FBC0961F2C3D8600B87BF4 /* TYNavigationVC.m */; };
+		66FBC09B1F2C5FD500B87BF4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 66FBC09A1F2C5FD500B87BF4 /* Assets.xcassets */; };
+		66FBC09E1F2C68F500B87BF4 /* UIColor+TYHexColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 66FBC09D1F2C68F500B87BF4 /* UIColor+TYHexColor.m */; };
 		A766BB7A1F262500004D9A81 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A766BB791F262500004D9A81 /* main.m */; };
 		A766BB7D1F262500004D9A81 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A766BB7C1F262500004D9A81 /* AppDelegate.m */; };
 		A766BB801F262500004D9A81 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A766BB7F1F262500004D9A81 /* ViewController.m */; };
 		A766BB831F262500004D9A81 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A766BB811F262500004D9A81 /* Main.storyboard */; };
-		A766BB851F262500004D9A81 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A766BB841F262500004D9A81 /* Assets.xcassets */; };
 		A766BB881F262500004D9A81 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A766BB861F262500004D9A81 /* LaunchScreen.storyboard */; };
 		A766BB931F262500004D9A81 /* TYCameraTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A766BB921F262500004D9A81 /* TYCameraTests.m */; };
 		A766BB9E1F262500004D9A81 /* TYCameraUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = A766BB9D1F262500004D9A81 /* TYCameraUITests.m */; };
@@ -39,6 +45,19 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		66FBC0881F2B787900B87BF4 /* TYTakePhotoVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TYTakePhotoVC.h; sourceTree = "<group>"; };
+		66FBC0891F2B787900B87BF4 /* TYTakePhotoVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TYTakePhotoVC.m; sourceTree = "<group>"; };
+		66FBC08B1F2B788800B87BF4 /* TYTakeVideoVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TYTakeVideoVC.h; sourceTree = "<group>"; };
+		66FBC08C1F2B788800B87BF4 /* TYTakeVideoVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TYTakeVideoVC.m; sourceTree = "<group>"; };
+		66FBC08E1F2B78AA00B87BF4 /* TYCustomCameraVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TYCustomCameraVC.h; sourceTree = "<group>"; };
+		66FBC08F1F2B78AA00B87BF4 /* TYCustomCameraVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TYCustomCameraVC.m; sourceTree = "<group>"; };
+		66FBC0911F2B885200B87BF4 /* TYFlashBtn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TYFlashBtn.h; sourceTree = "<group>"; };
+		66FBC0921F2B885200B87BF4 /* TYFlashBtn.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TYFlashBtn.m; sourceTree = "<group>"; };
+		66FBC0951F2C3D8600B87BF4 /* TYNavigationVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TYNavigationVC.h; sourceTree = "<group>"; };
+		66FBC0961F2C3D8600B87BF4 /* TYNavigationVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TYNavigationVC.m; sourceTree = "<group>"; };
+		66FBC09A1F2C5FD500B87BF4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		66FBC09C1F2C68F500B87BF4 /* UIColor+TYHexColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIColor+TYHexColor.h"; sourceTree = "<group>"; };
+		66FBC09D1F2C68F500B87BF4 /* UIColor+TYHexColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+TYHexColor.m"; sourceTree = "<group>"; };
 		A766BB751F262500004D9A81 /* TYCamera.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TYCamera.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A766BB791F262500004D9A81 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		A766BB7B1F262500004D9A81 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -46,7 +65,6 @@
 		A766BB7E1F262500004D9A81 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		A766BB7F1F262500004D9A81 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		A766BB821F262500004D9A81 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		A766BB841F262500004D9A81 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A766BB871F262500004D9A81 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A766BB891F262500004D9A81 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A766BB8E1F262500004D9A81 /* TYCameraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TYCameraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -113,16 +131,26 @@
 		A766BB771F262500004D9A81 /* TYCamera */ = {
 			isa = PBXGroup;
 			children = (
-				A766BBAB1F262511004D9A81 /* Camera */,
 				A766BB7B1F262500004D9A81 /* AppDelegate.h */,
 				A766BB7C1F262500004D9A81 /* AppDelegate.m */,
+				A766BBAB1F262511004D9A81 /* Camera */,
+				66FBC0951F2C3D8600B87BF4 /* TYNavigationVC.h */,
+				66FBC0961F2C3D8600B87BF4 /* TYNavigationVC.m */,
 				A766BB7E1F262500004D9A81 /* ViewController.h */,
 				A766BB7F1F262500004D9A81 /* ViewController.m */,
+				66FBC0881F2B787900B87BF4 /* TYTakePhotoVC.h */,
+				66FBC0891F2B787900B87BF4 /* TYTakePhotoVC.m */,
+				66FBC08B1F2B788800B87BF4 /* TYTakeVideoVC.h */,
+				66FBC08C1F2B788800B87BF4 /* TYTakeVideoVC.m */,
+				66FBC08E1F2B78AA00B87BF4 /* TYCustomCameraVC.h */,
+				66FBC08F1F2B78AA00B87BF4 /* TYCustomCameraVC.m */,
 				A766BB811F262500004D9A81 /* Main.storyboard */,
-				A766BB841F262500004D9A81 /* Assets.xcassets */,
 				A766BB861F262500004D9A81 /* LaunchScreen.storyboard */,
+				66FBC09A1F2C5FD500B87BF4 /* Assets.xcassets */,
 				A766BB891F262500004D9A81 /* Info.plist */,
 				A766BB781F262500004D9A81 /* Supporting Files */,
+				66FBC09C1F2C68F500B87BF4 /* UIColor+TYHexColor.h */,
+				66FBC09D1F2C68F500B87BF4 /* UIColor+TYHexColor.m */,
 			);
 			path = TYCamera;
 			sourceTree = "<group>";
@@ -164,6 +192,8 @@
 				A766BBB31F262764004D9A81 /* TYRecordEncoder.m */,
 				A766BBB51F262882004D9A81 /* TYRecordHelper.h */,
 				A766BBB61F262882004D9A81 /* TYRecordHelper.m */,
+				66FBC0911F2B885200B87BF4 /* TYFlashBtn.h */,
+				66FBC0921F2B885200B87BF4 /* TYFlashBtn.m */,
 			);
 			path = Camera;
 			sourceTree = "<group>";
@@ -236,7 +266,7 @@
 				TargetAttributes = {
 					A766BB741F262500004D9A81 = {
 						CreatedOnToolsVersion = 8.3.3;
-						DevelopmentTeam = 357U756QKW;
+						DevelopmentTeam = 2Z9ZXL2VJG;
 						ProvisioningStyle = Automatic;
 					};
 					A766BB8D1F262500004D9A81 = {
@@ -279,7 +309,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A766BB881F262500004D9A81 /* LaunchScreen.storyboard in Resources */,
-				A766BB851F262500004D9A81 /* Assets.xcassets in Resources */,
+				66FBC09B1F2C5FD500B87BF4 /* Assets.xcassets in Resources */,
 				A766BB831F262500004D9A81 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -305,13 +335,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				66FBC0931F2B885200B87BF4 /* TYFlashBtn.m in Sources */,
+				66FBC0971F2C3D8600B87BF4 /* TYNavigationVC.m in Sources */,
 				A766BB801F262500004D9A81 /* ViewController.m in Sources */,
+				66FBC09E1F2C68F500B87BF4 /* UIColor+TYHexColor.m in Sources */,
 				A766BB7D1F262500004D9A81 /* AppDelegate.m in Sources */,
 				A766BBB41F262764004D9A81 /* TYRecordEncoder.m in Sources */,
 				A766BBAE1F26252D004D9A81 /* TYCameraVC.m in Sources */,
 				A766BBB11F26274D004D9A81 /* TYRecordEngine.m in Sources */,
+				66FBC0901F2B78AA00B87BF4 /* TYCustomCameraVC.m in Sources */,
 				A766BBB71F262882004D9A81 /* TYRecordHelper.m in Sources */,
 				A766BB7A1F262500004D9A81 /* main.m in Sources */,
+				66FBC08A1F2B787900B87BF4 /* TYTakePhotoVC.m in Sources */,
+				66FBC08D1F2B788800B87BF4 /* TYTakeVideoVC.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -460,7 +496,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 357U756QKW;
+				DEVELOPMENT_TEAM = 2Z9ZXL2VJG;
+				GCC_PREFIX_HEADER = "";
 				INFOPLIST_FILE = TYCamera/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -473,7 +510,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 357U756QKW;
+				DEVELOPMENT_TEAM = 2Z9ZXL2VJG;
+				GCC_PREFIX_HEADER = "";
 				INFOPLIST_FILE = TYCamera/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

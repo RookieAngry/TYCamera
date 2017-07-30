@@ -47,8 +47,8 @@
 
 - (instancetype)init {
     if (self = [super init]) {
-        _maxRecordTime = 60.f;
-        _minRecordTime = 3.f;
+        self.maxRecordTime = 60.f;
+        self.minRecordTime = 3.f;
         _videoW = 720;
         _videoH = 1280;
     }
@@ -74,7 +74,6 @@
         [self.captureSession stopRunning];
     }
     
-    [self removeInputsOutputs];
     self.captureQueue = nil;
     NSLog(@"%@ %@",[self class], NSStringFromSelector(_cmd));
 }
@@ -215,19 +214,15 @@
     }];
 }
 
-- (void)openFlashLight:(BOOL)open {
+- (void)setupFlashLight:(AVCaptureFlashMode)mode {
     AVCaptureDevice *backCamera = [self captureDeviceInput:AVCaptureDevicePositionBack];
-    if (backCamera.hasTorch && backCamera.hasFlash) {
+    if (backCamera.hasFlash) {
         [backCamera lockForConfiguration:nil];
-        if (open) {
-            backCamera.torchMode = AVCaptureTorchModeOn;
-            backCamera.flashMode = AVCaptureTorchModeOn;
-        } else {
-            backCamera.torchMode = AVCaptureTorchModeOff;
-            backCamera.flashMode = AVCaptureFlashModeOff;
-        }
+        backCamera.flashMode = mode;
         [backCamera unlockForConfiguration];
     }
+    
+    [self.captureSession startRunning];
 }
 
 #pragma mark - Private Functions
@@ -330,37 +325,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
     
     self.cameraConnection.videoOrientation = AVCaptureVideoOrientationPortrait;
-}
-
-- (void)removeInputsOutputs {
-    [self.captureSession beginConfiguration];
-    
-    if (self.cameraInput) {
-        [self.captureSession removeInput:self.cameraInput];
-        self.cameraInput = nil;
-    }
-    
-    if (self.microInput) {
-        [self.captureSession removeInput:self.microInput];
-        self.microInput = nil;
-    }
-    
-    if (self.cameraOutput) {
-        [self.captureSession removeOutput:self.cameraOutput];
-        self.cameraOutput = nil;
-    }
-    
-    if (self.microOutput) {
-        [self.captureSession removeOutput:self.microOutput];
-        self.microOutput = nil;
-    }
-    
-    if (self.photoOutput) {
-        [self.captureSession removeOutput:self.photoOutput];
-        self.photoOutput = nil;
-    }
-    
-    [self.captureSession commitConfiguration];
 }
 
 - (void)switchCameraAnimation {
