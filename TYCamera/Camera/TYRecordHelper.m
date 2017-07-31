@@ -60,7 +60,6 @@
         }
         [self videoCoverImage:finalPath success:^(UIImage *coverImage) {
             if (success) {
-                NSLog(@"%zd",coverImage.imageOrientation);
                 success(coverImage, finalPath);
             }
         } failure:^(NSError *error) {

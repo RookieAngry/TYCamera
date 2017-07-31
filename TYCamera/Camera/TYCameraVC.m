@@ -66,11 +66,6 @@
     [self.recordEngine openRecordFunctions];
 }
 
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-    [self.recordEngine closeRecordFunctions];
-}
-
 - (void)dealloc {
     NSLog(@"%@ %@",[self class], NSStringFromSelector(_cmd));
 }

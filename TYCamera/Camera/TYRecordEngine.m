@@ -70,7 +70,38 @@
     if ([self.captureSession isRunning]) {
         [self.captureSession stopRunning];
     }
+    if (self.cameraInput) {
+        [self.captureSession removeInput:self.cameraInput];
+    }
+    if (self.microInput) {
+        [self.captureSession removeInput:self.microInput];
+    }
     
+    if (self.microOutput) {
+        [self.captureSession removeOutput:self.microOutput];
+    }
+    
+    if (self.cameraOutput) {
+        [self.captureSession removeOutput:self.cameraOutput];
+    }
+    
+    if (self.photoOutput) {
+        [self.captureSession removeOutput:self.photoOutput];
+    }
+
+    if (self.timer) {
+        dispatch_source_cancel(self.timer);
+        self.timer = nil;
+    }
+    self.cameraInput = nil;
+    self.microInput = nil;
+    self.cameraOutput = nil;
+    self.microOutput = nil;
+    self.microOutput = nil;
+    self.photoOutput = nil;
+    self.cameraConnection = nil;
+    self.microConnection = nil;
+    self.captureSession =  nil;
     self.captureQueue = nil;
     NSLog(@"%@ %@",[self class], NSStringFromSelector(_cmd));
 }
@@ -307,10 +338,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     
     if ([self.captureSession canAddOutput:self.cameraOutput]) {
         [self.captureSession addOutput:self.cameraOutput];
+        [self.cameraOutput setSampleBufferDelegate:self queue:self.captureQueue];
     }
     
     if ([self.captureSession canAddOutput:self.microOutput]) {
         [self.captureSession addOutput:self.microOutput];
+        [self.microOutput setSampleBufferDelegate:self queue:self.captureQueue];
     }
     
     self.cameraConnection.videoOrientation = AVCaptureVideoOrientationPortrait;
@@ -381,7 +414,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (AVCaptureVideoDataOutput *)cameraOutput {
     if (!_cameraOutput) {
         _cameraOutput = [[AVCaptureVideoDataOutput alloc] init];
-        [_cameraOutput setSampleBufferDelegate:self queue:self.captureQueue];
         NSDictionary* setting = [NSDictionary dictionaryWithObjectsAndKeys:
                                         [NSNumber numberWithInt:kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange], kCVPixelBufferPixelFormatTypeKey,
                                         nil];
@@ -393,7 +425,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (AVCaptureAudioDataOutput *)microOutput {
     if (!_microOutput) {
         _microOutput = [[AVCaptureAudioDataOutput alloc] init];
-        [_microOutput setSampleBufferDelegate:self queue:self.captureQueue];
     }
     return _microOutput;
 }

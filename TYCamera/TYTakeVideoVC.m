@@ -87,12 +87,13 @@
 - (void)aboutViewRecord {
     __weak typeof(self) weakSelf = self;
     self.progress = ^(CGFloat progress) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
         UIBezierPath *progressPath = [UIBezierPath bezierPath];
-        CGFloat startX = weakSelf.videoDuration * weakSelf.view.frame.size.width / weakSelf.maxDuration + weakSelf.whiteProgressLayerArray.count;
+        CGFloat startX = strongSelf.videoDuration * strongSelf.view.frame.size.width / strongSelf.maxDuration + strongSelf.whiteProgressLayerArray.count;
         [progressPath moveToPoint:CGPointMake(startX, 1)];
-        CGFloat targetX = self.view.frame.size.width / weakSelf.maxDuration * progress + startX;
+        CGFloat targetX = strongSelf.view.frame.size.width / strongSelf.maxDuration * progress + startX;
         [progressPath addLineToPoint:CGPointMake(targetX, 1)];
-        weakSelf.currentProgressLayer.path = progressPath.CGPath;
+        strongSelf.currentProgressLayer.path = progressPath.CGPath;
     };
     
     self.lessMinDuration = ^{
@@ -100,12 +101,13 @@
     };
     
     self.largerEqualMaxDuration = ^{
-        weakSelf.takeVideoBtn.enabled = NO;
-        [weakSelf finishCaptureHandler:^(UIImage *coverImage, NSString *filePath, NSTimeInterval duration) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        strongSelf.takeVideoBtn.enabled = NO;
+        [strongSelf finishCaptureHandler:^(UIImage *coverImage, NSString *filePath, NSTimeInterval duration) {
             TYPlayerVC *playervc = [[TYPlayerVC alloc] init];
             playervc.coverImage = coverImage;
             playervc.videoPath = filePath;
-            [weakSelf.navigationController pushViewController:playervc animated:YES];
+            [strongSelf.navigationController pushViewController:playervc animated:YES];
         } failure:^(NSError *error) {
             NSLog(@"Compound Videos Failure! Error:%@", error);
         }];
