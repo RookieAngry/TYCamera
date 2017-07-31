@@ -17,8 +17,6 @@
 
 @property(nonatomic, strong) UIButton *takeVideoBtn;
 
-@property(nonatomic, strong) UIButton *customCameraBtn;
-
 @end
 
 @implementation ViewController
@@ -41,16 +39,13 @@
     CGFloat buttonH = 50.f;
     CGFloat buttonMargin = 10.f;
     CGFloat buttonX = (kUIScreenW - buttonW) * 0.5;
-    CGFloat buttonOriginY = (kUIScreenH - 3 * buttonH - 2 * buttonMargin) * 0.5;
+    CGFloat buttonOriginY = (kUIScreenH - 2 * buttonH - 2 * buttonMargin) * 0.5;
     
     [self.view addSubview:self.takePhotoBtn];
     self.takePhotoBtn.frame = CGRectMake(buttonX, buttonOriginY, buttonW, buttonH);
     
     [self.view addSubview:self.takeVideoBtn];
     self.takeVideoBtn.frame = CGRectMake(buttonX, CGRectGetMaxY(self.takePhotoBtn.frame) + buttonMargin, buttonW, buttonH);
-    
-    [self.view addSubview:self.customCameraBtn];
-    self.customCameraBtn.frame = CGRectMake(buttonX, CGRectGetMaxY(self.takeVideoBtn.frame) + buttonMargin, buttonW, buttonH);
 }
 
 #pragma mark - Actions
@@ -92,16 +87,6 @@
         [_takeVideoBtn addTarget:self action:@selector(takeVideoBtnClick) forControlEvents:UIControlEventTouchUpInside];
     }
     return _takeVideoBtn;
-}
-
-- (UIButton *)customCameraBtn {
-    if (!_customCameraBtn) {
-        _customCameraBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [_customCameraBtn setTitle:@"自定义" forState:UIControlStateNormal];
-        _customCameraBtn.backgroundColor = [UIColor redColor];
-        [_customCameraBtn addTarget:self action:@selector(customCameraBtnClick) forControlEvents:UIControlEventTouchUpInside];
-    }
-    return _customCameraBtn;
 }
 
 

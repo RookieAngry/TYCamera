@@ -46,7 +46,7 @@
 
 - (void)encoderFrame:(CMSampleBufferRef)sampleBuffer isVideo:(BOOL)isVideo {
     if (CMSampleBufferDataIsReady(sampleBuffer)) {
-        if (self.cameraWriter.status == AVAssetWriterStatusUnknown) {
+        if (self.cameraWriter.status == AVAssetWriterStatusUnknown && isVideo) {
             
             if ([self.cameraWriter canAddInput:self.videoInput]) {
                 [self.cameraWriter addInput:self.videoInput];
@@ -58,6 +58,10 @@
             
             [self.cameraWriter startWriting];
             [self.cameraWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
+        }
+        
+        if (self.cameraWriter.status == AVAssetWriterStatusFailed) {
+            NSLog(@"writer error %@", self.cameraWriter.error.localizedDescription);
         }
         
         if (self.videoInput.isReadyForMoreMediaData && isVideo) {

@@ -8,6 +8,8 @@
 
 #import "TYNavigationVC.h"
 #import "UIColor+TYHexColor.h"
+#import "TYTakePhotoVC.h"
+#import "TYTakeVideoVC.h"
 
 @interface TYNavigationVC ()
 
@@ -30,7 +32,7 @@
 }
 
 - (void)pushViewController:(UIViewController *)viewController animated:(BOOL)animated {
-    if (self.viewControllers.count) {
+    if (self.viewControllers.count && ([viewController isKindOfClass:[TYTakePhotoVC class]] || [viewController isKindOfClass:[TYTakeVideoVC class]])) {
         [self setupNavigationWithVC:viewController];
     }
     [super pushViewController:viewController animated:animated];

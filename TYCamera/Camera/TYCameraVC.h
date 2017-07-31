@@ -32,6 +32,18 @@ typedef void(^ty_recordLargerEqualMaxDuration)();
 @property(nonatomic, assign) NSTimeInterval maxDuration;
 
 /**
+ 当前视频录制的总时长
+ */
+@property (nonatomic, assign) NSTimeInterval videoDuration;
+
+/**
+ 已录制的视频路径的数组
+ */
+@property (nonatomic, strong, readonly) NSArray *videosPath;
+
+@property (nonatomic, strong) NSMutableArray *durations;
+
+/**
  录制一段视频时的当前进度回调
  */
 @property(nonatomic, copy) ty_recordProgress progress;

@@ -9,12 +9,13 @@
 #import "TYTakeVideoVC.h"
 #import "TYNavigationVC.h"
 #import "UIColor+TYHexColor.h"
+#import "TYPlayerVC.h"
 
 @interface TYTakeVideoVC () <TYNavigationVCDelegate>
 
 @property(nonatomic, strong) UIView *bottomView;
 
-@property (nonatomic, strong) UIButton *takePhotoBtn;
+@property (nonatomic, strong) UIButton *takeVideoBtn;
 
 @property(nonatomic, strong) UILongPressGestureRecognizer *pressGesture;
 
@@ -28,15 +29,11 @@
 
 @property(nonatomic, strong) CAShapeLayer *breakPointGrayLayer;
 
-@property(nonatomic, strong) CAShapeLayer *progressHeadLayer;
+@property(nonatomic, strong) CAShapeLayer *currentProgressLayer;
 
-@property(nonatomic, strong) CAShapeLayer *progressLayer;
+@property (nonatomic, strong) NSMutableArray<CAShapeLayer *> *progressLayerArray;
 
-@property(nonatomic, strong) UIBezierPath *progressPath;
-
-@property(nonatomic, strong) dispatch_source_t timer;
-
-@property(nonatomic, assign) CGFloat lastProgress;
+@property (nonatomic, strong) NSMutableArray<CAShapeLayer *> *whiteProgressLayerArray;
 
 @end
 
@@ -61,17 +58,17 @@
     [self.view addSubview:self.bottomView];
     self.bottomView.frame = CGRectMake(0, self.view.bounds.size.height - 223.f, self.view.bounds.size.width, 223.f);
     
-    [self.bottomView addSubview:self.takePhotoBtn];
+    [self.bottomView addSubview:self.takeVideoBtn];
     CGSize btnSize = [UIImage imageNamed:@"record"].size;
-    self.takePhotoBtn.frame = CGRectMake((self.bottomView.frame.size.width - btnSize.width) * 0.5, (self.bottomView.frame.size.height - btnSize.height) * 0.5, btnSize.width, btnSize.height);
+    self.takeVideoBtn.frame = CGRectMake((self.bottomView.frame.size.width - btnSize.width) * 0.5, (self.bottomView.frame.size.height - btnSize.height) * 0.5, btnSize.width, btnSize.height);
     
     [self.bottomView addSubview:self.cancelBtn];
     CGSize cancelBtnSize = self.cancelBtn.imageView.frame.size;
-    self.cancelBtn.frame = CGRectMake(self.takePhotoBtn.frame.origin.x - cancelBtnSize.width - 30.f, (self.bottomView.frame.size.height - cancelBtnSize.height) * 0.5, cancelBtnSize.width, cancelBtnSize.height);
+    self.cancelBtn.frame = CGRectMake(self.takeVideoBtn.frame.origin.x - cancelBtnSize.width - 30.f, (self.bottomView.frame.size.height - cancelBtnSize.height) * 0.5, cancelBtnSize.width, cancelBtnSize.height);
     
     [self.bottomView addSubview:self.sureBtn];
     CGSize sureBtnSize = self.sureBtn.imageView.frame.size;
-    self.sureBtn.frame = CGRectMake(CGRectGetMaxX(self.takePhotoBtn.frame) + 30.f, (self.bottomView.frame.size.height - sureBtnSize.height) * 0.5, sureBtnSize.width, sureBtnSize.height);
+    self.sureBtn.frame = CGRectMake(CGRectGetMaxX(self.takeVideoBtn.frame) + 30.f, (self.bottomView.frame.size.height - sureBtnSize.height) * 0.5, sureBtnSize.width, sureBtnSize.height);
     
     UIBezierPath *totalLinePath = [UIBezierPath bezierPathWithRect:CGRectMake(0, 0, self.view.frame.size.width, 2.f)];
     self.totalProgressLayer.path = totalLinePath.CGPath;
@@ -85,17 +82,17 @@
     UIBezierPath *breakPointGrayPath = [UIBezierPath bezierPathWithRect:CGRectMake(breakPointX + 2, 0, 2.f, 2.f)];
     self.breakPointGrayLayer.path = breakPointGrayPath.CGPath;
     [self.totalProgressLayer addSublayer:self.breakPointGrayLayer];
-    UIBezierPath *progressPath = [UIBezierPath bezierPathWithRect:CGRectMake(0, 0, 2.f, 2.f)];
-    self.progressHeadLayer.path = progressPath.CGPath;
-    [self.totalProgressLayer addSublayer:self.progressHeadLayer];
-    
-    [self.totalProgressLayer addSublayer:self.progressLayer];
 }
 
 - (void)aboutViewRecord {
     __weak typeof(self) weakSelf = self;
     self.progress = ^(CGFloat progress) {
-
+        UIBezierPath *progressPath = [UIBezierPath bezierPath];
+        CGFloat startX = weakSelf.videoDuration * weakSelf.view.frame.size.width / weakSelf.maxDuration + weakSelf.whiteProgressLayerArray.count;
+        [progressPath moveToPoint:CGPointMake(startX, 1)];
+        CGFloat targetX = self.view.frame.size.width / weakSelf.maxDuration * progress + startX;
+        [progressPath addLineToPoint:CGPointMake(targetX, 1)];
+        weakSelf.currentProgressLayer.path = progressPath.CGPath;
     };
     
     self.lessMinDuration = ^{
@@ -103,7 +100,15 @@
     };
     
     self.largerEqualMaxDuration = ^{
-        NSLog(@"larger");
+        weakSelf.takeVideoBtn.enabled = NO;
+        [weakSelf finishCaptureHandler:^(UIImage *coverImage, NSString *filePath, NSTimeInterval duration) {
+            TYPlayerVC *playervc = [[TYPlayerVC alloc] init];
+            playervc.coverImage = coverImage;
+            playervc.videoPath = filePath;
+            [weakSelf.navigationController pushViewController:playervc animated:YES];
+        } failure:^(NSError *error) {
+            NSLog(@"Compound Videos Failure! Error:%@", error);
+        }];
     };
 }
 
@@ -112,19 +117,60 @@
 - (void)pressGestureAction {
     if (self.pressGesture.state == UIGestureRecognizerStateBegan) {
         [self startRecord];
+        self.currentProgressLayer = [self progressLayer];
+        [self.totalProgressLayer addSublayer:self.currentProgressLayer];
+        [self.progressLayerArray addObject:self.currentProgressLayer];
     }
     
     if (self.pressGesture.state == UIGestureRecognizerStateEnded) {
-        [self stopRecord];
+        if (self.videoDuration < self.maxDuration) {
+            [self stopRecord];
+            UIBezierPath *whiteBreakPath = [UIBezierPath bezierPathWithRect:CGRectMake(self.videoDuration * self.view.frame.size.width / self.maxDuration + self.whiteProgressLayerArray.count, -0.5, 1.f, 4.f)];
+            CAShapeLayer *whiteLayer = [CAShapeLayer layer];
+            whiteLayer.strokeColor = [UIColor colorWithHexString:@"ffffff"].CGColor;
+            whiteLayer.lineWidth = 1.f;
+            whiteLayer.path = whiteBreakPath.CGPath;
+            [self.bottomView.layer addSublayer:whiteLayer];
+            [self.whiteProgressLayerArray addObject:whiteLayer];
+        }
     }
 }
 
 - (void)cancelBtnClick {
-    self.cancelBtn.selected = !self.cancelBtn.selected;
+    if (self.videosPath.count) {
+        if (self.cancelBtn.selected) {
+            [self removeVideoAtIndex:self.videosPath.count - 1];
+            [self.progressLayerArray.lastObject removeFromSuperlayer];
+            [self.progressLayerArray removeLastObject];
+            [self.whiteProgressLayerArray.lastObject removeFromSuperlayer];
+            [self.whiteProgressLayerArray removeLastObject];
+            self.takeVideoBtn.enabled = YES;
+        }
+        self.cancelBtn.selected = !self.cancelBtn.selected;
+    }
 }
 
 - (void)sureBtnClick {
-    NSLog(@"===");
+    if (self.videoDuration < self.minDuration) {
+        UIAlertController *alertvc = [UIAlertController alertControllerWithTitle:nil message:@"时间不能少于3s" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            
+        }];
+        [alertvc addAction:sureAction];
+        [self presentViewController:alertvc animated:YES completion:nil];
+        return;
+    }
+    
+    __weak typeof(self) weakSelf = self;
+    [self finishCaptureHandler:^(UIImage *coverImage, NSString *filePath, NSTimeInterval duration) {
+        TYPlayerVC *playervc = [[TYPlayerVC alloc] init];
+        playervc.coverImage = coverImage;
+        playervc.videoPath = filePath;
+        [weakSelf.navigationController pushViewController:playervc animated:YES];
+    } failure:^(NSError *error) {
+        NSLog(@"Compound Videos Failure! Error:%@", error);
+    }];
+    
 }
 
 #pragma mark - TYNavigationVCDelegate
@@ -135,17 +181,6 @@
 
 - (void)flashButtonAction:(AVCaptureFlashMode)mode {
     [self setupFlashLight:mode];
-}
-
-#pragma mark - Tool Functions
-
-- (void)progressHeaderStartShowHide {
-    self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
-    dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC, 0 * NSEC_PER_SEC);
-    dispatch_source_set_event_handler(_timer, ^{
-        self.progressHeadLayer.hidden = !self.progressHeadLayer.hidden;
-    });
-    dispatch_resume(_timer);
 }
 
 #pragma mark - Lazy Load
@@ -159,15 +194,15 @@
     return _bottomView;
 }
 
-- (UIButton *)takePhotoBtn {
-    if (!_takePhotoBtn) {
-        _takePhotoBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-        [_takePhotoBtn setBackgroundImage:[UIImage imageNamed:@"record"] forState:UIControlStateNormal];
-        [_takePhotoBtn setTitle:@"按住拍" forState:UIControlStateNormal];
-        _takePhotoBtn.titleLabel.font = [UIFont systemFontOfSize:15.f weight:UIFontWeightThin];
-        [_takePhotoBtn addGestureRecognizer:self.pressGesture];
+- (UIButton *)takeVideoBtn {
+    if (!_takeVideoBtn) {
+        _takeVideoBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_takeVideoBtn setBackgroundImage:[UIImage imageNamed:@"record"] forState:UIControlStateNormal];
+        [_takeVideoBtn setTitle:@"按住拍" forState:UIControlStateNormal];
+        _takeVideoBtn.titleLabel.font = [UIFont systemFontOfSize:15.f weight:UIFontWeightThin];
+        [_takeVideoBtn addGestureRecognizer:self.pressGesture];
     }
-    return _takePhotoBtn;
+    return _takeVideoBtn;
 }
 
 - (UILongPressGestureRecognizer *)pressGesture {
@@ -225,29 +260,25 @@
     return _breakPointGrayLayer;
 }
 
-- (CAShapeLayer *)progressHeadLayer {
-    if (!_progressHeadLayer) {
-        _progressHeadLayer = [CAShapeLayer layer];
-        _progressHeadLayer.strokeColor = [UIColor colorWithHexString:@"444444"].CGColor;
-        _progressHeadLayer.lineWidth = 2.f;
-    }
-    return _progressHeadLayer;
-}
-
 - (CAShapeLayer *)progressLayer {
-    if (!_progressLayer) {
-        _progressLayer = [CAShapeLayer layer];
-        _progressLayer.strokeColor = [UIColor orangeColor].CGColor;
-        _progressLayer.lineWidth = 4.f;
-    }
-    return _progressLayer;
+    CAShapeLayer *progressLayer = [CAShapeLayer layer];
+    progressLayer.strokeColor = [UIColor orangeColor].CGColor;
+    progressLayer.lineWidth = 4.f;
+    return progressLayer;
 }
 
-- (UIBezierPath *)progressPath {
-    if (!_progressPath) {
-        _progressPath = [UIBezierPath bezierPath];
+- (NSMutableArray<CAShapeLayer *> *)progressLayerArray {
+    if (!_progressLayerArray) {
+        _progressLayerArray = [NSMutableArray array];
     }
-    return _progressPath;
+    return _progressLayerArray;
+}
+
+- (NSMutableArray<CAShapeLayer *> *)whiteProgressLayerArray {
+    if (!_whiteProgressLayerArray) {
+        _whiteProgressLayerArray = [NSMutableArray array];
+    }
+    return _whiteProgressLayerArray;
 }
 
 @end

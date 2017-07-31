@@ -25,6 +25,7 @@
 		A766BBB11F26274D004D9A81 /* TYRecordEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = A766BBB01F26274D004D9A81 /* TYRecordEngine.m */; };
 		A766BBB41F262764004D9A81 /* TYRecordEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = A766BBB31F262764004D9A81 /* TYRecordEncoder.m */; };
 		A766BBB71F262882004D9A81 /* TYRecordHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A766BBB61F262882004D9A81 /* TYRecordHelper.m */; };
+		DB6801DF1F2ED3E500C9B548 /* TYPlayerVC.m in Sources */ = {isa = PBXBuildFile; fileRef = DB6801DE1F2ED3E500C9B548 /* TYPlayerVC.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +82,8 @@
 		A766BBB31F262764004D9A81 /* TYRecordEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TYRecordEncoder.m; sourceTree = "<group>"; };
 		A766BBB51F262882004D9A81 /* TYRecordHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TYRecordHelper.h; sourceTree = "<group>"; };
 		A766BBB61F262882004D9A81 /* TYRecordHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TYRecordHelper.m; sourceTree = "<group>"; };
+		DB6801DD1F2ED3E500C9B548 /* TYPlayerVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TYPlayerVC.h; sourceTree = "<group>"; };
+		DB6801DE1F2ED3E500C9B548 /* TYPlayerVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TYPlayerVC.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,6 +145,8 @@
 				66FBC0891F2B787900B87BF4 /* TYTakePhotoVC.m */,
 				66FBC08B1F2B788800B87BF4 /* TYTakeVideoVC.h */,
 				66FBC08C1F2B788800B87BF4 /* TYTakeVideoVC.m */,
+				DB6801DD1F2ED3E500C9B548 /* TYPlayerVC.h */,
+				DB6801DE1F2ED3E500C9B548 /* TYPlayerVC.m */,
 				66FBC08E1F2B78AA00B87BF4 /* TYCustomCameraVC.h */,
 				66FBC08F1F2B78AA00B87BF4 /* TYCustomCameraVC.m */,
 				A766BB811F262500004D9A81 /* Main.storyboard */,
@@ -347,6 +352,7 @@
 				A766BBB71F262882004D9A81 /* TYRecordHelper.m in Sources */,
 				A766BB7A1F262500004D9A81 /* main.m in Sources */,
 				66FBC08A1F2B787900B87BF4 /* TYTakePhotoVC.m in Sources */,
+				DB6801DF1F2ED3E500C9B548 /* TYPlayerVC.m in Sources */,
 				66FBC08D1F2B788800B87BF4 /* TYTakeVideoVC.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

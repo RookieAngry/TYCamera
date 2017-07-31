@@ -138,6 +138,20 @@
     }
 }
 
+#pragma mark - Getter
+
+- (NSTimeInterval)videoDuration {
+    return self.recordEngine.videoDuration;
+}
+
+- (NSArray *)videosPath {
+    return self.recordEngine.videosPath;
+}
+
+- (NSMutableArray *)durations {
+    return self.recordEngine.durations;
+}
+
 #pragma mark - Lazy Load
 
 - (TYRecordEngine *)recordEngine {

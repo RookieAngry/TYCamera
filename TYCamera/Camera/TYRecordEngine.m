@@ -27,9 +27,6 @@
 @property (nonatomic, assign) NSTimeInterval currentDuration;
 @property (nonatomic, strong) dispatch_queue_t captureQueue;
 @property (atomic, assign) BOOL isCapturing;
-@property (nonatomic, strong) NSMutableArray *videosPath;
-@property (nonatomic, assign) NSTimeInterval videoDuration;
-@property (nonatomic, strong) NSMutableArray *durations;
 
 @end
 
@@ -170,6 +167,7 @@
     
     [self.videosPath removeObjectAtIndex:index];
     self.videoDuration -= [self.durations[index] floatValue];
+    [self.durations removeObjectAtIndex:index];
 }
 
 - (void)finishCaptureHandler:(void (^)(UIImage *, NSString *, NSTimeInterval))handler failure:(void (^)(NSError *))failure {
@@ -180,18 +178,9 @@
     }
     AVMutableComposition *compisition = [TYRecordHelper combineVideosWithAssetArray:avassets];
     [TYRecordHelper transformFormatToMp4WithAsset:compisition presetName:AVAssetExportPreset1280x720 success:^(UIImage *coverImage, NSString *filePath) {
-        for (NSString *videoPath in self.videosPath) {
-            NSError *error = nil;
-            [[NSFileManager defaultManager] removeItemAtPath:videoPath error:&error];
-            if (error) {
-                NSLog(@"Remove Video Failure! Error:%@", error);
-            }
-        }
         if (handler) {
             handler(coverImage, filePath, self.videoDuration);
         }
-        self.videoDuration = 0;
-        [self.videosPath removeAllObjects];
     } failure:^(NSError *error) {
         if (failure) {
             failure(error);
@@ -232,7 +221,7 @@
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
-    
+    self.cameraConnection.videoMirrored = [self isFrontFacingCameraPreset];
     if (!self.isCapturing) {  return; }
     
     if (!self.recordEncoder && captureOutput == self.microOutput) {
@@ -248,8 +237,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         });
     }
     
-    if (self.currentDuration > (self.maxRecordTime - self.videoDuration)) {
-        [self stopRecord];
+    if (self.currentDuration >= (self.maxRecordTime - self.videoDuration)) {
+        [self closeRecordFunctions];
         return;
     }
     [self.recordEncoder encoderFrame:sampleBuffer isVideo:captureOutput != self.microOutput];

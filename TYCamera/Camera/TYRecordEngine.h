@@ -30,10 +30,36 @@ typedef NS_ENUM(NSUInteger, TYRecordEngineType) {
 @interface TYRecordEngine : NSObject
 
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
+
+/**
+ 允许录制视频的最长时间
+ */
 @property (nonatomic, assign) NSTimeInterval maxRecordTime;
+/**
+ 允许录制视频的最短时间
+ */
 @property (nonatomic, assign) NSTimeInterval minRecordTime;
+/**
+ 当前录制视频的总时长
+ */
+@property (nonatomic, assign) NSTimeInterval videoDuration;
+/**
+ 存储视频片段地址的数组
+ */
+@property (nonatomic, strong) NSMutableArray *videosPath;
+
+@property (nonatomic, strong) NSMutableArray *durations;
+
 @property (nonatomic, weak) id<TYRecordEngineDelegate> delegate;
 
+/**
+ 初始化TYRecordEngines实例对象
+
+ @param preset 设置录制视频的质量
+ @param position 设置摄像头（前置摄像头/后置摄像头）
+ @param recordType 录制视频的类型
+ @return 返回TYRecordEngines实例对象
+ */
 - (instancetype)initRecordEngineSessionPreset:(NSString *)preset
                             devicePosition:(AVCaptureDevicePosition)position
                                 recordType:(TYRecordEngineType)recordType;
