@@ -326,11 +326,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [self.captureSession commitConfiguration];
 }
 
-- (NSDateComponents *)dateComponentFromDate:(NSDate *)startDate toDate:( NSDate *)resultDate {
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    return [calendar components:NSCalendarUnitSecond fromDate:startDate toDate:resultDate options:0];
-}
-
 - (void)addVideoInputOutput {
     if ([self.captureSession canAddInput:self.microInput]) {
         [self.captureSession addInput:self.microInput];
