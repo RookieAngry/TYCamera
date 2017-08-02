@@ -41,7 +41,8 @@
 }
 
 - (instancetype)initRecordEngineSessionPreset:(NSString *)preset
-                               devicePosition:(AVCaptureDevicePosition)position recordType:(TYCameraVCType)cameraType
+                               devicePosition:(AVCaptureDevicePosition)position
+                                   recordType:(TYCameraVCType)cameraType
                                  previewFrame:(CGRect)frame {
     if (self = [super init]) {
         _preset = preset;
